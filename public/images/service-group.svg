@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000" role="img" aria-label="Illustrative placeholder — replace with licensed photography">
+  <defs><linearGradient id="g22" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#F3E9D2"/><stop offset="50%" stop-color="#E4CFA3"/><stop offset="100%" stop-color="#D9B98C"/></linearGradient></defs>
+  <rect width="1600" height="1000" fill="url(#g22)"/>
+  <circle cx="1240" cy="240" r="110" fill="#E9B44C" opacity="0.7"/>
+  <path d="M0 560 Q 100 482.82866366344626 200 572.8685345346215 Q 300 470.07841835096576 400 577.9686326596137 Q 500 486.75969328777757 600 571.2961226848889 Q 700 521.9433256291175 800 557.222669748353 Q 900 552.5778610475707 1000 544.9688555809718 Q 1100 558.5923021205582 1200 542.5630791517767 Q 1300 536.046134339692 1400 551.5815462641232 Q 1500 499.7110547206921 1600 566.1155781117232 Q 1700 473.39291765046596 1800 576.6428329398136 L 1600 1000 L 0 1000 Z" fill="#8B9678" opacity="0.7"/>
+  <rect x="0" y="680" width="1600" height="320" fill="#BFA271"/>
+  <g transform="translate(480 760)"><rect x="0" y="0" width="300" height="80" rx="10" fill="#2E3B2C"/><rect x="16" y="14" width="52" height="34" rx="4" fill="#F7F2E9" opacity="0.85"/><rect x="84" y="14" width="52" height="34" rx="4" fill="#F7F2E9" opacity="0.85"/><rect x="152" y="14" width="52" height="34" rx="4" fill="#F7F2E9" opacity="0.85"/><rect x="220" y="14" width="52" height="34" rx="4" fill="#F7F2E9" opacity="0.85"/><circle cx="60" cy="88" r="20" fill="#26221B"/><circle cx="240" cy="88" r="20" fill="#26221B"/></g>
+  <g fill="#26221B"><circle cx="920" cy="790" r="14"/><rect x="911" y="802" width="18" height="38" rx="8"/><circle cx="965" cy="792" r="13"/><rect x="957" y="803" width="17" height="36" rx="8"/><circle cx="1008" cy="795" r="12"/><rect x="1001" y="805" width="15" height="33" rx="7"/><circle cx="1046" cy="798" r="10"/><rect x="1040" y="806" width="13" height="28" rx="6"/></g>
+  <g fill="#2E3B2C" transform="translate(220 660) scale(1.2)">
+    <path d="M0 0 L6 -70 L10 -70 L18 0 Z"/>
+    <path d="M8 -70 L-52 -96 M8 -70 L64 -100 M8 -70 L4 -104" stroke="#2E3B2C" stroke-width="5" fill="none"/>
+    <ellipse cx="-48" cy="-98" rx="46" ry="12"/>
+    <ellipse cx="56" cy="-102" rx="52" ry="13"/>
+    <ellipse cx="4" cy="-112" rx="40" ry="11"/>
+  </g>
+</svg>

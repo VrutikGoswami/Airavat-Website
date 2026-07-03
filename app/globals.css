@@ -1,0 +1,173 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+   Design tokens — provisional brand system, easy to swap when the real
+   brand lands. One dominant accent (ochre) + one supporting accent (gold).
+--------------------------------------------------------------------------- */
+@theme {
+  /* Surfaces */
+  --color-ivory: #f7f2e9; /* primary background */
+  --color-sand: #efe7d8; /* alternate section background */
+  --color-parchment: #e7dcc6; /* borders on light surfaces */
+  --color-forest: #2e3b2c; /* deep secondary surface */
+  --color-forest-deep: #232d22;
+
+  /* Text */
+  --color-ink: #26221b; /* near-black, warm */
+  --color-ink-soft: #57503f; /* secondary text */
+  --color-cream: #f7f2e9;
+  --color-cream-soft: #d9d2c0;
+
+  /* Accents */
+  --color-ochre: #b4531f; /* primary action */
+  --color-clay: #93441a; /* action hover */
+  --color-gold: #e9b44c; /* supporting accent — labels, highlights */
+
+  /* Supporting neutrals */
+  --color-stone: #8a8273;
+  --color-sage: #8b9678;
+
+  /* Type */
+  --font-display: var(--font-fraunces), Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-manrope), system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* Motion */
+  --ease-editorial: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ---------------------------------------------------------------------------
+   Base
+--------------------------------------------------------------------------- */
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  background-color: var(--color-ivory);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background-color: var(--color-gold);
+  color: var(--color-ink);
+}
+
+/* Visible focus everywhere, without doubled outlines on mouse use */
+:focus-visible {
+  outline: 2px solid var(--color-ochre);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* ---------------------------------------------------------------------------
+   Editorial primitives
+--------------------------------------------------------------------------- */
+@utility container-site {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 80rem;
+  padding-inline: 1.25rem;
+  @media (width >= 40rem) {
+    padding-inline: 2rem;
+  }
+  @media (width >= 64rem) {
+    padding-inline: 3rem;
+  }
+}
+
+@utility display-serif {
+  font-family: var(--font-display);
+  font-weight: 560;
+  letter-spacing: -0.015em;
+  line-height: 1.06;
+  font-variation-settings: "opsz" 72;
+}
+
+@utility eyebrow {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+/* Thin editorial rule used between sections instead of boxes */
+@utility rule-top {
+  border-top: 1px solid var(--color-parchment);
+}
+
+/* Skip link */
+.skip-link {
+  position: fixed;
+  top: -100%;
+  left: 1rem;
+  z-index: 100;
+  padding: 0.75rem 1.25rem;
+  background: var(--color-ink);
+  color: var(--color-cream);
+  font-weight: 600;
+  border-radius: 0 0 6px 6px;
+  transition: top 150ms var(--ease-editorial);
+}
+.skip-link:focus-visible {
+  top: 0;
+}
+
+/* Gentle reveal used on heroes; disabled for reduced motion */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.rise-in {
+  animation: rise-in 700ms var(--ease-editorial) both;
+}
+.rise-in-late {
+  animation: rise-in 700ms 180ms var(--ease-editorial) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .rise-in,
+  .rise-in-late {
+    animation: none;
+  }
+}
+
+/* Image hover treatment — subtle scale inside a cropped frame */
+.img-frame {
+  overflow: hidden;
+}
+.img-frame img {
+  transition: transform 600ms var(--ease-editorial);
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  a:hover .img-frame img,
+  .img-frame:hover img {
+    transform: scale(1.04);
+  }
+}
+
+/* MapLibre overrides to match the brand */
+.maplibregl-popup-content {
+  font-family: var(--font-sans);
+  border-radius: 6px;
+  padding: 0;
+  overflow: hidden;
+  box-shadow: 0 8px 30px rgb(38 34 27 / 0.25);
+}
+.maplibregl-ctrl-group {
+  border-radius: 6px;
+  overflow: hidden;
+}

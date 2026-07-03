@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000" role="img" aria-label="Illustrative placeholder — replace with licensed photography">
+  <defs><linearGradient id="g5" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#E9B44C"/><stop offset="50%" stop-color="#D97B3F"/><stop offset="100%" stop-color="#B4531F"/></linearGradient></defs>
+  <rect width="1600" height="1000" fill="url(#g5)"/>
+  <circle cx="400" cy="380" r="150" fill="#E9B44C" opacity="0.9"/>
+  <g transform="translate(1050 330) scale(1.6)">
+    <path d="M0 -90 C -52 -90 -60 -20 0 30 C 60 -20 52 -90 0 -90 Z" fill="#B4531F"/>
+    <path d="M-18 -86 C -30 -60 -26 -10 0 28 C 26 -10 30 -60 18 -86" fill="none" stroke="#F7F2E9" stroke-width="6" opacity="0.85"/>
+    <path d="M-12 34 L12 34 L9 52 L-9 52 Z" fill="#26221B"/>
+    <path d="M-10 30 L-8 40 M10 30 L8 40" stroke="#26221B" stroke-width="3"/>
+  </g>
+  <g transform="translate(650 200) scale(0.9)">
+    <path d="M0 -90 C -52 -90 -60 -20 0 30 C 60 -20 52 -90 0 -90 Z" fill="#9A4519"/>
+    <path d="M-18 -86 C -30 -60 -26 -10 0 28 C 26 -10 30 -60 18 -86" fill="none" stroke="#F7F2E9" stroke-width="6" opacity="0.85"/>
+    <path d="M-12 34 L12 34 L9 52 L-9 52 Z" fill="#26221B"/>
+    <path d="M-10 30 L-8 40 M10 30 L8 40" stroke="#26221B" stroke-width="3"/>
+  </g>
+  <path d="M0 640 Q 100 629.8233624170097 200 626.0706550331961 Q 300 597.3195315962386 400 639.0721873615046 Q 500 563.2960004746905 600 652.6815998101238 Q 700 550.044153469315 800 657.982338612274 Q 900 566.2462762246092 1000 651.5014895101563 Q 1100 601.2871346715718 1200 637.4851461313713 Q 1300 632.2088164421224 1400 625.1164734231511 Q 1500 638.7521928554702 1600 622.4991228578119 Q 1700 616.6302039208824 1800 631.347918431647 L 1600 1000 L 0 1000 Z" fill="#7A4A28" opacity="0.8"/>
+  <rect x="0" y="730" width="1600" height="270" fill="#4A2F17"/>
+  <g fill="#241709" transform="translate(1280 880) scale(1.4)">
+    <path d="M0 0 L6 -70 L10 -70 L18 0 Z"/>
+    <path d="M8 -70 L-52 -96 M8 -70 L64 -100 M8 -70 L4 -104" stroke="#241709" stroke-width="5" fill="none"/>
+    <ellipse cx="-48" cy="-98" rx="46" ry="12"/>
+    <ellipse cx="56" cy="-102" rx="52" ry="13"/>
+    <ellipse cx="4" cy="-112" rx="40" ry="11"/>
+  </g>
+  <g stroke="#26221B" stroke-width="3" fill="none" opacity="0.75">
+    <path d="M240 220 q 8 -8 16 0 q 8 -8 16 0"/>
+    <path d="M300 194 q 7 -7 14 0 q 7 -7 14 0"/>
+    <path d="M190 180 q 6 -6 12 0 q 6 -6 12 0"/>
+  </g>
+</svg>

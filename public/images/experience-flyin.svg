@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000" role="img" aria-label="Illustrative placeholder — replace with licensed photography">
+  <defs><linearGradient id="g10" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#F3E9D2"/><stop offset="50%" stop-color="#E4CFA3"/><stop offset="100%" stop-color="#D9B98C"/></linearGradient></defs>
+  <rect width="1600" height="1000" fill="url(#g10)"/>
+  <circle cx="360" cy="260" r="120" fill="#E9B44C" opacity="0.7"/>
+  <g fill="#26221B" transform="translate(880 300) scale(1.5) rotate(-12)">
+    <path d="M0 0 L150 0 Q170 0 176 8 Q170 16 150 16 L0 16 Q-14 8 0 0 Z"/>
+    <path d="M60 4 L28 -44 L44 -44 L88 4 Z"/>
+    <path d="M60 12 L36 48 L50 48 L88 12 Z"/>
+    <path d="M142 2 L128 -22 L140 -22 L158 2 Z"/>
+  </g>
+  <path d="M0 600 Q 100 547.7908775834063 200 600.8836489666375 Q 300 585.4872617799803 400 585.8050952880079 Q 500 599.9332610762708 600 580.0266955694916 Q 700 581.6642104893817 800 587.3343158042472 Q 900 542.6495445882942 1000 602.9401821646823 Q 1100 508.45071707378685 1200 616.6197131704853 Q 1300 501.47396226678876 1400 619.4104150932845 Q 1500 526.2902790689205 1600 609.4838883724318 Q 1700 566.640624417507 1800 593.3437502329972 L 1600 1000 L 0 1000 Z" fill="#8B9678" opacity="0.7"/>
+  <rect x="0" y="700" width="1600" height="300" fill="#BFA271"/>
+  <rect x="500" y="840" width="620" height="14" rx="7" fill="#8A7048"/>
+  <g fill="#2E3B2C" transform="translate(240 820) scale(1.4)">
+    <path d="M0 0 L6 -70 L10 -70 L18 0 Z"/>
+    <path d="M8 -70 L-52 -96 M8 -70 L64 -100 M8 -70 L4 -104" stroke="#2E3B2C" stroke-width="5" fill="none"/>
+    <ellipse cx="-48" cy="-98" rx="46" ry="12"/>
+    <ellipse cx="56" cy="-102" rx="52" ry="13"/>
+    <ellipse cx="4" cy="-112" rx="40" ry="11"/>
+  </g>
+  <g stroke="#26221B" stroke-width="3" fill="none" opacity="0.75">
+    <path d="M1300 200 q 8 -8 16 0 q 8 -8 16 0"/>
+    <path d="M1360 174 q 7 -7 14 0 q 7 -7 14 0"/>
+    <path d="M1250 160 q 6 -6 12 0 q 6 -6 12 0"/>
+  </g>
+</svg>
