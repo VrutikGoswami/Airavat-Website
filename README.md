@@ -73,10 +73,44 @@ Key design decisions:
 - **Maps are isolated.** Tile provider config lives in `config/map.ts` (env-driven, with a
   free default style). The MapLibre canvas handles loading, WebGL failure and reduced
   motion; the accessible place list exists outside the map, so the map is never the only
-  source of location information.
+  source of location information. See "Editing the map" below.
 - **Future integrations are seams, not fakes.** `lib/integrations` defines typed interfaces
   for Amadeus, CRM, WhatsApp Business, payments and hotel contracts. Only the in-memory
   enquiry store is implemented.
+
+---
+
+## Editing the map
+
+The interactive maps (homepage "Explore Kenya" and the Maasai Mara page explorer)
+are driven entirely by data and config — you rarely need to touch component code.
+
+**Locations** — edit `data/map-points.ts`. Each `MapPoint` has `id`, `name`,
+`category`, `latitude`, `longitude`, `shortDescription`, optional `image`
+(`/images/*.jpg`), optional `href` ("View destination" target), optional
+`destinationSlug` (drives "Plan this trip" → `/request-a-quote?...&destination=<slug>`),
+and `verified`. Keep demo coordinates `verified: false`. Add a location by appending
+an entry and adding its `id` to `kenyaOverviewPointIds` (homepage) or `maraPointIds`
+(Mara page). Categories: `destination`, `reserve`, `conservancy`, `gate`, `airstrip`,
+`town`, `experience`, `departure` — marker colours are set per category in
+`CATEGORY_META` (`components/map/MapCanvas.tsx`).
+
+**Default views** — `KENYA_VIEW` and `MARA_VIEW` (center + zoom) in `config/map.ts`.
+
+**Seasonal highlight** — the gold-ringed marker + "Seasonal focus" badge follow
+`config/campaigns.ts` (`getActiveCampaign()`); no map code changes needed.
+
+**Tiles / style / provider** — set in `.env.local`:
+
+```env
+NEXT_PUBLIC_MAP_STYLE_URL=      # e.g. a MapTiler/Stadia/Protomaps style URL
+NEXT_PUBLIC_MAP_PROVIDER_KEY=   # appended as ?key= if your provider needs it
+```
+
+With both empty, `config/map.ts` falls back to the free MapLibre demo style
+(low-detail, fine for development). The private key is only ever read server-side
+via env — never hard-code it. If the style or WebGL fails, the map renders an
+error card and the full location list remains available.
 
 ---
 

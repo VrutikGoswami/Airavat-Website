@@ -4,28 +4,20 @@ import maplibregl, { Map as MLMap, Marker, Popup } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useEffect, useRef, useState } from "react";
 import type { MapPoint } from "@/types";
-import { getMapStyleUrl } from "@/config/map";
+import { CATEGORY_META, getMapStyleUrl } from "@/config/map";
 import { track } from "@/lib/analytics";
+import { buildWhatsAppUrl, whatsappGreeting } from "@/lib/whatsapp";
 
-export const CATEGORY_META: Record<
-  MapPoint["category"],
-  { label: string; color: string }
-> = {
-  reserve: { label: "Reserve", color: "#B4531F" },
-  conservancy: { label: "Conservancy", color: "#4A5A40" },
-  gate: { label: "Gate", color: "#26221B" },
-  airstrip: { label: "Airstrip", color: "#7C8FA0" },
-  town: { label: "Town / staging", color: "#8A8273" },
-  experience: { label: "Experience area", color: "#E9B44C" },
-  departure: { label: "Departure point", color: "#93441A" },
-};
-
-type Props = {
+export type MapCanvasProps = {
   points: MapPoint[];
   center: [number, number];
   zoom: number;
   activePointId?: string | null;
   onSelect?: (id: string) => void;
+  /** Persistent gold ring, e.g. the current seasonal destination. */
+  highlightId?: string | null;
+  /** Fallback slug for "Plan this trip" when a point has no destinationSlug. */
+  defaultDestinationSlug?: string;
   /** Fit the view to the supplied points on load / when they change. */
   fitToPoints?: boolean;
   heightClass?: string;
@@ -45,27 +37,57 @@ function prefersReducedMotion(): boolean {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-function popupHtml(point: MapPoint): string {
-  const category = CATEGORY_META[point.category].label;
+const esc = (s: string) =>
+  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+/** Lightweight, brand-styled popup with an image and enquiry actions. */
+function popupHtml(point: MapPoint, defaultSlug?: string): string {
+  const meta = CATEGORY_META[point.category];
+  const slug = point.destinationSlug ?? defaultSlug;
+  const planHref = slug
+    ? `/request-a-quote?service=safari&destination=${encodeURIComponent(slug)}`
+    : "/request-a-quote";
+  const waMessage = whatsappGreeting(`I would like help planning a trip to ${point.name}.`);
+  const waHref = buildWhatsAppUrl(waMessage) ?? "/contact#whatsapp";
+  const waTarget = waHref.startsWith("http") ? ' target="_blank" rel="noopener noreferrer"' : "";
+
+  const imageBlock = point.image
+    ? `<div style="height:118px;overflow:hidden;background:#EFE7D8;"><img src="/_next/image?url=${encodeURIComponent(
+        point.image,
+      )}&w=384&q=70" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;" /></div>`
+    : "";
+
   const verification = point.verified
     ? ""
-    : `<p style="margin:6px 12px 0;font-size:10px;color:#8A8273;">Demonstration location — to be verified</p>`;
-  const link = point.href
-    ? `<p style="margin:8px 12px 0;"><a href="${point.href}" style="color:#B4531F;font-weight:600;font-size:12px;">View details →</a></p>`
+    : `<p style="margin:8px 0 0;font-size:10px;color:#8A8273;">Demonstration location — to be verified</p>`;
+
+  const btn =
+    "display:block;text-align:center;padding:7px 8px;border-radius:3px;font-size:12px;font-weight:600;text-decoration:none;line-height:1;";
+  const viewBtn = point.href
+    ? `<a href="${point.href}" style="${btn}border:1px solid rgba(38,34,27,0.22);color:#26221B;">View destination</a>`
     : "";
-  return `<div style="max-width:230px;padding-bottom:12px;background:#F7F2E9;">
-    <p style="margin:10px 12px 0;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;font-weight:700;color:#93441A;">${category}</p>
-    <p style="margin:2px 12px 0;font-weight:700;font-size:14px;color:#26221B;">${point.name}</p>
-    <p style="margin:6px 12px 0;font-size:12px;line-height:1.5;color:#57503F;">${point.shortDescription}</p>
-    ${verification}${link}
+
+  return `<div style="width:250px;background:#F7F2E9;font-family:inherit;">
+    ${imageBlock}
+    <div style="padding:11px 13px 13px;">
+      <p style="margin:0;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;font-weight:700;color:#93441A;">${esc(meta.label)}</p>
+      <p style="margin:3px 0 0;font-weight:700;font-size:15px;color:#26221B;">${esc(point.name)}</p>
+      <p style="margin:6px 0 0;font-size:12px;line-height:1.5;color:#57503F;">${esc(point.shortDescription)}</p>
+      ${verification}
+      <div style="display:flex;flex-direction:column;gap:6px;margin-top:11px;">
+        ${viewBtn}
+        <a href="${planHref}" style="${btn}background:#B4531F;color:#F7F2E9;">Plan this trip</a>
+        <a href="${waHref}"${waTarget} style="${btn}border:1px solid rgba(38,34,27,0.22);color:#26221B;">Chat on WhatsApp</a>
+      </div>
+    </div>
   </div>`;
 }
 
 /**
- * Shared MapLibre canvas: custom brand markers, popups, fit-to-points,
- * reset + zoom controls, loading skeleton and a graceful fallback when
- * WebGL or the style fails (the accessible place list always exists
- * outside this component).
+ * Shared MapLibre canvas: custom brand markers with hover/active/seasonal
+ * states, image-rich popups with enquiry actions, fit-to-points, reset + zoom
+ * controls, loading skeleton and a graceful fallback when WebGL or the style
+ * fails (the accessible place list always exists outside this component).
  */
 export function MapCanvas({
   points,
@@ -73,17 +95,18 @@ export function MapCanvas({
   zoom,
   activePointId,
   onSelect,
+  highlightId,
+  defaultDestinationSlug,
   fitToPoints = false,
   heightClass = "h-105",
   trackingSource,
-}: Props) {
+}: MapCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MLMap | null>(null);
   const markersRef = useRef<globalThis.Map<string, Marker>>(new globalThis.Map());
   const popupRef = useRef<Popup | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
 
-  // Keep callback fresh without re-creating the map.
   const onSelectRef = useRef(onSelect);
   onSelectRef.current = onSelect;
 
@@ -120,7 +143,6 @@ export function MapCanvas({
       track("map_opened", { source: trackingSource });
     });
     map.on("error", () => {
-      // Only fail hard if the style never loaded (tile hiccups are tolerable).
       if (!loaded) setStatus("error");
     });
 
@@ -131,7 +153,6 @@ export function MapCanvas({
       map.remove();
       mapRef.current = null;
     };
-    // The map is created once; view changes are handled below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -147,11 +168,17 @@ export function MapCanvas({
       const el = document.createElement("button");
       el.type = "button";
       el.setAttribute("aria-label", `${point.name} — show details`);
-      el.style.cssText = `width:16px;height:16px;border-radius:50%;border:2.5px solid #F7F2E9;cursor:pointer;background:${CATEGORY_META[point.category].color};box-shadow:0 1px 6px rgb(38 34 27 / 0.45);padding:0;`;
+      el.style.cssText = `width:16px;height:16px;border-radius:50%;border:2.5px solid #F7F2E9;cursor:pointer;background:${CATEGORY_META[point.category].color};box-shadow:0 1px 6px rgb(38 34 27 / 0.45);padding:0;transition:transform 140ms ease, width 140ms ease, height 140ms ease;`;
       el.addEventListener("click", (e) => {
         e.stopPropagation();
         onSelectRef.current?.(point.id);
         track("map_marker_selected", { source: trackingSource, point: point.id });
+      });
+      el.addEventListener("mouseenter", () => {
+        if (point.id !== activePointId) el.style.transform = "scale(1.18)";
+      });
+      el.addEventListener("mouseleave", () => {
+        el.style.transform = "";
       });
       const marker = new maplibregl.Marker({ element: el })
         .setLngLat([point.longitude, point.latitude])
@@ -164,9 +191,10 @@ export function MapCanvas({
       points.forEach((p) => bounds.extend([p.longitude, p.latitude]));
       map.fitBounds(bounds, { padding: 56, animate: false, maxZoom: 11 });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [points, status, fitToPoints, trackingSource]);
 
-  // Active point: emphasise marker, open popup, centre view.
+  // Active + seasonal-highlight marker states, popup, and centring.
   useEffect(() => {
     const map = mapRef.current;
     if (!map || status !== "ready") return;
@@ -177,20 +205,29 @@ export function MapCanvas({
     markersRef.current.forEach((marker, id) => {
       const el = marker.getElement();
       const isActive = id === activePointId;
-      el.style.width = isActive ? "22px" : "16px";
-      el.style.height = isActive ? "22px" : "16px";
-      el.style.zIndex = isActive ? "5" : "1";
-      el.style.outline = isActive ? "3px solid rgba(233,180,76,0.85)" : "none";
+      const isHighlight = id === highlightId;
+      const size = isActive ? 24 : isHighlight ? 20 : 16;
+      el.style.width = `${size}px`;
+      el.style.height = `${size}px`;
+      el.style.transform = "";
+      el.style.zIndex = isActive ? "6" : isHighlight ? "4" : "1";
+      el.style.outline = isActive
+        ? "3px solid rgba(233,180,76,0.95)"
+        : isHighlight
+          ? "3px solid rgba(233,180,76,0.65)"
+          : "none";
+      el.style.outlineOffset = "1px";
     });
 
     if (!activePointId) return;
     const point = points.find((p) => p.id === activePointId);
     if (!point) return;
 
-    popupRef.current = new maplibregl.Popup({ offset: 18, closeButton: true })
+    popupRef.current = new maplibregl.Popup({ offset: 18, closeButton: true, maxWidth: "260px" })
       .setLngLat([point.longitude, point.latitude])
-      .setHTML(popupHtml(point))
+      .setHTML(popupHtml(point, defaultDestinationSlug))
       .addTo(map);
+    popupRef.current.on("close", () => onSelectRef.current?.(""));
 
     const target: [number, number] = [point.longitude, point.latitude];
     if (prefersReducedMotion()) {
@@ -198,7 +235,7 @@ export function MapCanvas({
     } else {
       map.easeTo({ center: target, duration: 650 });
     }
-  }, [activePointId, points, status]);
+  }, [activePointId, highlightId, points, status, defaultDestinationSlug]);
 
   const resetView = () => {
     const map = mapRef.current;
@@ -242,7 +279,7 @@ export function MapCanvas({
         <button
           type="button"
           onClick={resetView}
-          className="absolute left-3 top-3 rounded-[3px] bg-ivory/95 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-ink shadow hover:bg-ivory"
+          className="absolute left-3 top-3 z-[2] rounded-[3px] bg-ivory/95 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-ink shadow hover:bg-ivory"
         >
           Reset map
         </button>

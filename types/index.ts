@@ -9,6 +9,7 @@
 // ---------------------------------------------------------------------------
 
 export type MapPointCategory =
+  | "destination"
   | "reserve"
   | "conservancy"
   | "gate"
@@ -25,7 +26,10 @@ export type MapPoint = {
   longitude: number;
   shortDescription: string;
   image?: string;
+  /** Canonical link for "View destination" (a destination page or /destinations). */
   href?: string;
+  /** Links this point to a destination in data/destinations.ts (drives "Plan this trip"). */
+  destinationSlug?: string;
   /** Coordinates confirmed by the business. Demo entries are `false`. */
   verified: boolean;
 };

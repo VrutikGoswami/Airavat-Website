@@ -21,7 +21,7 @@ import { TrustStatement } from "@/components/editorial/TrustStatement";
 import { DestinationExplorer } from "@/components/destination/DestinationExplorer";
 import { ItineraryCard } from "@/components/destination/ItineraryCard";
 import { PlanningStarter } from "@/components/forms/PlanningStarter";
-import { LazyKenyaMapPreview } from "@/components/map/LazyMaps";
+import { ExploreKenyaMap } from "@/components/map/ExploreKenyaMap";
 
 export const metadata: Metadata = {
   title: "Tours & Travel from Nairobi — Flights, Safaris, Hotels & Holidays",
@@ -44,6 +44,9 @@ export default function HomePage() {
   const campaign = getActiveCampaign();
   const mara = destinations.find((d) => d.slug === "maasai-mara")!;
   const kenyaPoints = getMapPoints(kenyaOverviewPointIds);
+  const seasonalPointId = campaign
+    ? (kenyaPoints.find((p) => p.destinationSlug === campaign.destinationSlug)?.id ?? null)
+    : null;
   const homepageFaqs = homepageFaqIds
     .map((id) => faqs.find((f) => f.id === id))
     .filter((f): f is NonNullable<typeof f> => Boolean(f));
@@ -189,14 +192,14 @@ export default function HomePage() {
       ) : null}
 
       {/* ------------------------------------------------------- Kenya map */}
-      <section className="container-site py-16 sm:py-20 lg:py-24">
+      <section id="explore-kenya" className="container-site py-16 sm:py-20 lg:py-24">
         <SectionHeading
-          eyebrow="Kenya at a glance"
-          title="Where trips begin"
-          lede="Nairobi is the hub; the Mara is the headline. Select a place to see how it fits into a trip — every location is also listed for screen readers and slow connections."
+          eyebrow="Explore Kenya"
+          title="Where every Kenyan trip begins"
+          lede="Nairobi is the hub; the Mara is the headline. Select a destination to see how it fits into a trip and start planning — every location is also listed for screen readers and slow connections."
         />
         <div className="mt-10">
-          <LazyKenyaMapPreview points={kenyaPoints} />
+          <ExploreKenyaMap points={kenyaPoints} seasonalId={seasonalPointId} />
         </div>
       </section>
 

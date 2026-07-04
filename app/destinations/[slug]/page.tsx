@@ -15,7 +15,7 @@ import { PageHero } from "@/components/editorial/PageHero";
 import { ExperienceCard } from "@/components/destination/ExperienceCard";
 import { ItineraryCard } from "@/components/destination/ItineraryCard";
 import { MonthSeasonality } from "@/components/destination/MonthSeasonality";
-import { LazyMaraMapExplorer } from "@/components/map/LazyMaps";
+import { MaraMapExplorer } from "@/components/map/MaraMapExplorer";
 
 type Params = { slug: string };
 
@@ -248,7 +248,7 @@ export default async function DestinationPage({
             lede="Reserve areas, gates, airstrips and staging points — select a place in the list or on the map to see how it fits your trip. Every location is also available as text below."
           />
           <div className="mt-10">
-            <LazyMaraMapExplorer points={mapPoints} />
+            <MaraMapExplorer points={mapPoints} defaultDestinationSlug={destination.slug} />
           </div>
         </div>
       </section>
