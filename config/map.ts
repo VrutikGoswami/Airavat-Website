@@ -3,17 +3,19 @@
  * provider can change without touching UI code.
  */
 
-const FALLBACK_STYLE_URL = "https://demotiles.maplibre.org/style.json";
+const FALLBACK_TILE_TEMPLATE = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 
-export function getMapStyleUrl(): string {
-  const styleUrl = process.env.NEXT_PUBLIC_MAP_STYLE_URL;
+export function getMapTileUrl({ x, y, z }: { x: number; y: number; z: number }): string {
+  const template = process.env.NEXT_PUBLIC_MAP_TILE_URL ?? FALLBACK_TILE_TEMPLATE;
   const key = process.env.NEXT_PUBLIC_MAP_PROVIDER_KEY;
-  if (!styleUrl) return FALLBACK_STYLE_URL;
-  if (key) {
-    const sep = styleUrl.includes("?") ? "&" : "?";
-    return `${styleUrl}${sep}key=${key}`;
-  }
-  return styleUrl;
+  const url = template
+    .replace("{x}", String(x))
+    .replace("{y}", String(y))
+    .replace("{z}", String(z))
+    .replace("{key}", key ?? "");
+  if (!key || template.includes("{key}")) return url;
+  const sep = url.includes("?") ? "&" : "?";
+  return `${url}${sep}key=${key}`;
 }
 
 /** Approximate view of Kenya for the homepage preview. */
@@ -30,3 +32,5 @@ export const MARA_VIEW = {
 
 export const MAP_ATTRIBUTION_NOTE =
   "Map locations are provided for trip-planning context. Routes, access points and operating conditions should be confirmed before travel.";
+
+export const MAP_TILE_ATTRIBUTION = "© OpenStreetMap contributors";

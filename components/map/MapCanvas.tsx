@@ -1,10 +1,8 @@
 "use client";
 
-import maplibregl, { Map as MLMap, Marker, Popup } from "maplibre-gl";
-import "maplibre-gl/dist/maplibre-gl.css";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { MapPoint } from "@/types";
-import { getMapStyleUrl } from "@/config/map";
+import { getMapTileUrl, MAP_TILE_ATTRIBUTION } from "@/config/map";
 import { track } from "@/lib/analytics";
 
 export const CATEGORY_META: Record<
@@ -32,40 +30,57 @@ type Props = {
   trackingSource: string;
 };
 
-function supportsWebGL(): boolean {
-  try {
-    const canvas = document.createElement("canvas");
-    return Boolean(canvas.getContext("webgl2") ?? canvas.getContext("webgl"));
-  } catch {
-    return false;
+type Size = { width: number; height: number };
+type View = { center: [number, number]; zoom: number };
+
+const TILE_SIZE = 256;
+const MIN_ZOOM = 3;
+const MAX_ZOOM = 12;
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
+function zoomLevel(value: number): number {
+  return clamp(Math.round(value), MIN_ZOOM, MAX_ZOOM);
+}
+
+function project(longitude: number, latitude: number, zoom: number) {
+  const sin = Math.sin((clamp(latitude, -85.0511, 85.0511) * Math.PI) / 180);
+  const scale = TILE_SIZE * 2 ** zoom;
+  return {
+    x: ((longitude + 180) / 360) * scale,
+    y: (0.5 - Math.log((1 + sin) / (1 - sin)) / (4 * Math.PI)) * scale,
+  };
+}
+
+function fitView(points: MapPoint[], fallback: View, size: Size, fitToPoints: boolean): View {
+  if (!fitToPoints || points.length < 2 || size.width === 0 || size.height === 0) {
+    return { center: fallback.center, zoom: zoomLevel(fallback.zoom) };
   }
-}
 
-function prefersReducedMotion(): boolean {
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
+  const west = Math.min(...points.map((p) => p.longitude));
+  const east = Math.max(...points.map((p) => p.longitude));
+  const south = Math.min(...points.map((p) => p.latitude));
+  const north = Math.max(...points.map((p) => p.latitude));
+  const center: [number, number] = [(west + east) / 2, (south + north) / 2];
+  const usableWidth = Math.max(160, size.width - 96);
+  const usableHeight = Math.max(160, size.height - 96);
 
-function popupHtml(point: MapPoint): string {
-  const category = CATEGORY_META[point.category].label;
-  const verification = point.verified
-    ? ""
-    : `<p style="margin:6px 12px 0;font-size:10px;color:#8A8273;">Demonstration location — to be verified</p>`;
-  const link = point.href
-    ? `<p style="margin:8px 12px 0;"><a href="${point.href}" style="color:#B4531F;font-weight:600;font-size:12px;">View details →</a></p>`
-    : "";
-  return `<div style="max-width:230px;padding-bottom:12px;background:#F7F2E9;">
-    <p style="margin:10px 12px 0;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;font-weight:700;color:#93441A;">${category}</p>
-    <p style="margin:2px 12px 0;font-weight:700;font-size:14px;color:#26221B;">${point.name}</p>
-    <p style="margin:6px 12px 0;font-size:12px;line-height:1.5;color:#57503F;">${point.shortDescription}</p>
-    ${verification}${link}
-  </div>`;
+  for (let z = MAX_ZOOM; z >= MIN_ZOOM; z -= 1) {
+    const nw = project(west, north, z);
+    const se = project(east, south, z);
+    if (Math.abs(se.x - nw.x) <= usableWidth && Math.abs(se.y - nw.y) <= usableHeight) {
+      return { center, zoom: z };
+    }
+  }
+
+  return { center, zoom: MIN_ZOOM };
 }
 
 /**
- * Shared MapLibre canvas: custom brand markers, popups, fit-to-points,
- * reset + zoom controls, loading skeleton and a graceful fallback when
- * WebGL or the style fails (the accessible place list always exists
- * outside this component).
+ * Shared HTML map canvas: OpenStreetMap raster tiles, custom brand markers,
+ * accessible marker buttons, popups, category/list sync and no WebGL dependency.
  */
 export function MapCanvas({
   points,
@@ -78,175 +93,210 @@ export function MapCanvas({
   trackingSource,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<MLMap | null>(null);
-  const markersRef = useRef<globalThis.Map<string, Marker>>(new globalThis.Map());
-  const popupRef = useRef<Popup | null>(null);
-  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+  const openedRef = useRef(false);
+  const [size, setSize] = useState<Size>({ width: 0, height: 0 });
+  const [manualZoom, setManualZoom] = useState<number | null>(null);
 
-  // Keep callback fresh without re-creating the map.
-  const onSelectRef = useRef(onSelect);
-  onSelectRef.current = onSelect;
+  const baseView = useMemo(
+    () => fitView(points, { center, zoom }, size, fitToPoints),
+    [center, fitToPoints, points, size, zoom],
+  );
+  const view = { ...baseView, zoom: manualZoom ?? baseView.zoom };
+  const z = zoomLevel(view.zoom);
+  const activePoint = points.find((p) => p.id === activePointId) ?? null;
 
   useEffect(() => {
-    if (!containerRef.current) return;
-    if (!supportsWebGL()) {
-      setStatus("error");
-      return;
-    }
+    const node = containerRef.current;
+    if (!node) return;
 
-    let map: MLMap;
-    try {
-      map = new maplibregl.Map({
-        container: containerRef.current,
-        style: getMapStyleUrl(),
-        center,
-        zoom,
-        attributionControl: { compact: true },
-        cooperativeGestures: true,
-      });
-    } catch {
-      setStatus("error");
-      return;
-    }
-
-    mapRef.current = map;
-    const markers = markersRef.current;
-    let loaded = false;
-
-    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
-    map.on("load", () => {
-      loaded = true;
-      setStatus("ready");
-      track("map_opened", { source: trackingSource });
-    });
-    map.on("error", () => {
-      // Only fail hard if the style never loaded (tile hiccups are tolerable).
-      if (!loaded) setStatus("error");
-    });
-
-    return () => {
-      markers.forEach((m) => m.remove());
-      markers.clear();
-      popupRef.current?.remove();
-      map.remove();
-      mapRef.current = null;
+    const resize = () => {
+      const rect = node.getBoundingClientRect();
+      setSize({ width: Math.round(rect.width), height: Math.round(rect.height) });
     };
-    // The map is created once; view changes are handled below.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    resize();
+
+    const observer = new ResizeObserver(resize);
+    observer.observe(node);
+    return () => observer.disconnect();
   }, []);
 
-  // Markers.
   useEffect(() => {
-    const map = mapRef.current;
-    if (!map || status !== "ready") return;
+    if (openedRef.current || size.width === 0 || size.height === 0) return;
+    openedRef.current = true;
+    track("map_opened", { source: trackingSource });
+  }, [size, trackingSource]);
 
-    markersRef.current.forEach((m) => m.remove());
-    markersRef.current.clear();
-
-    points.forEach((point) => {
-      const el = document.createElement("button");
-      el.type = "button";
-      el.setAttribute("aria-label", `${point.name} — show details`);
-      el.style.cssText = `width:16px;height:16px;border-radius:50%;border:2.5px solid #F7F2E9;cursor:pointer;background:${CATEGORY_META[point.category].color};box-shadow:0 1px 6px rgb(38 34 27 / 0.45);padding:0;`;
-      el.addEventListener("click", (e) => {
-        e.stopPropagation();
-        onSelectRef.current?.(point.id);
-        track("map_marker_selected", { source: trackingSource, point: point.id });
-      });
-      const marker = new maplibregl.Marker({ element: el })
-        .setLngLat([point.longitude, point.latitude])
-        .addTo(map);
-      markersRef.current.set(point.id, marker);
-    });
-
-    if (fitToPoints && points.length > 1) {
-      const bounds = new maplibregl.LngLatBounds();
-      points.forEach((p) => bounds.extend([p.longitude, p.latitude]));
-      map.fitBounds(bounds, { padding: 56, animate: false, maxZoom: 11 });
-    }
-  }, [points, status, fitToPoints, trackingSource]);
-
-  // Active point: emphasise marker, open popup, centre view.
   useEffect(() => {
-    const map = mapRef.current;
-    if (!map || status !== "ready") return;
+    setManualZoom(null);
+  }, [baseView.center, baseView.zoom]);
 
-    popupRef.current?.remove();
-    popupRef.current = null;
-
-    markersRef.current.forEach((marker, id) => {
-      const el = marker.getElement();
-      const isActive = id === activePointId;
-      el.style.width = isActive ? "22px" : "16px";
-      el.style.height = isActive ? "22px" : "16px";
-      el.style.zIndex = isActive ? "5" : "1";
-      el.style.outline = isActive ? "3px solid rgba(233,180,76,0.85)" : "none";
-    });
-
-    if (!activePointId) return;
-    const point = points.find((p) => p.id === activePointId);
-    if (!point) return;
-
-    popupRef.current = new maplibregl.Popup({ offset: 18, closeButton: true })
-      .setLngLat([point.longitude, point.latitude])
-      .setHTML(popupHtml(point))
-      .addTo(map);
-
-    const target: [number, number] = [point.longitude, point.latitude];
-    if (prefersReducedMotion()) {
-      map.jumpTo({ center: target });
-    } else {
-      map.easeTo({ center: target, duration: 650 });
-    }
-  }, [activePointId, points, status]);
-
-  const resetView = () => {
-    const map = mapRef.current;
-    if (!map) return;
-    if (fitToPoints && points.length > 1) {
-      const bounds = new maplibregl.LngLatBounds();
-      points.forEach((p) => bounds.extend([p.longitude, p.latitude]));
-      map.fitBounds(bounds, { padding: 56, animate: !prefersReducedMotion(), maxZoom: 11 });
-    } else {
-      map.jumpTo({ center, zoom });
-    }
-    popupRef.current?.remove();
-    onSelectRef.current?.("");
+  const centerPx = project(view.center[0], view.center[1], z);
+  const origin = {
+    x: centerPx.x - size.width / 2,
+    y: centerPx.y - size.height / 2,
   };
+  const tileMinX = Math.floor(origin.x / TILE_SIZE);
+  const tileMaxX = Math.floor((origin.x + size.width) / TILE_SIZE);
+  const tileMinY = Math.floor(origin.y / TILE_SIZE);
+  const tileMaxY = Math.floor((origin.y + size.height) / TILE_SIZE);
+  const worldTiles = 2 ** z;
 
-  if (status === "error") {
-    return (
-      <div
-        className={`flex ${heightClass} flex-col items-center justify-center border border-parchment bg-sand p-8 text-center`}
-        role="note"
-      >
-        <p className="font-semibold">The interactive map could not load on this device.</p>
-        <p className="mt-2 max-w-sm text-sm text-ink-soft">
-          All locations are listed alongside this map, so no information is missing.
-        </p>
-      </div>
-    );
+  const tiles = [];
+  for (let x = tileMinX; x <= tileMaxX; x += 1) {
+    for (let y = tileMinY; y <= tileMaxY; y += 1) {
+      if (y < 0 || y >= worldTiles) continue;
+      const wrappedX = ((x % worldTiles) + worldTiles) % worldTiles;
+      tiles.push({
+        key: `${z}-${x}-${y}`,
+        src: getMapTileUrl({ x: wrappedX, y, z }),
+        left: x * TILE_SIZE - origin.x,
+        top: y * TILE_SIZE - origin.y,
+      });
+    }
   }
 
+  const markerPosition = (point: MapPoint) => {
+    const px = project(point.longitude, point.latitude, z);
+    return {
+      left: px.x - origin.x,
+      top: px.y - origin.y,
+    };
+  };
+
+  const resetView = () => {
+    setManualZoom(null);
+    onSelect?.("");
+  };
+
+  const setZoom = (nextZoom: number) => {
+    setManualZoom(clamp(nextZoom, MIN_ZOOM, MAX_ZOOM));
+  };
+
   return (
-    <div className={`relative ${heightClass} overflow-hidden border border-parchment`}>
-      <div ref={containerRef} className="absolute inset-0" aria-hidden={status !== "ready"} />
-      {status === "loading" ? (
-        <div className="absolute inset-0 animate-pulse bg-sand" aria-label="Map loading">
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-sm font-semibold text-stone">
-            Loading map…
+    <div
+      ref={containerRef}
+      className={`relative ${heightClass} overflow-hidden border border-parchment bg-sand`}
+      aria-label="Interactive destination map"
+    >
+      {size.width > 0 ? (
+        <>
+          <div className="absolute inset-0" aria-hidden>
+            {tiles.map((tile) => (
+              <div
+                key={tile.key}
+                className="absolute bg-cover bg-center"
+                style={{
+                  left: tile.left,
+                  top: tile.top,
+                  width: TILE_SIZE,
+                  height: TILE_SIZE,
+                  backgroundImage: `url(${tile.src})`,
+                }}
+              />
+            ))}
           </div>
-        </div>
-      ) : null}
-      {status === "ready" ? (
-        <button
-          type="button"
-          onClick={resetView}
-          className="absolute left-3 top-3 rounded-[3px] bg-ivory/95 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-ink shadow hover:bg-ivory"
-        >
-          Reset map
-        </button>
-      ) : null}
+
+          {points.map((point) => {
+            const pos = markerPosition(point);
+            const active = activePointId === point.id;
+            return (
+              <button
+                key={point.id}
+                type="button"
+                aria-label={`${point.name} - show details`}
+                aria-pressed={active}
+                onClick={() => {
+                  onSelect?.(active ? "" : point.id);
+                  track("map_marker_selected", { source: trackingSource, point: point.id });
+                }}
+                className="absolute z-10 rounded-full border-[2.5px] border-ivory shadow-md transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ochre"
+                style={{
+                  left: pos.left,
+                  top: pos.top,
+                  width: active ? 24 : 18,
+                  height: active ? 24 : 18,
+                  backgroundColor: CATEGORY_META[point.category].color,
+                  transform: "translate(-50%, -50%)",
+                  outline: active ? "3px solid rgba(233,180,76,0.85)" : "none",
+                }}
+              />
+            );
+          })}
+
+          {activePoint ? (
+            <div
+              className="absolute z-20 w-64 border border-parchment bg-ivory p-4 text-left shadow-lg"
+              style={{
+                ...markerPosition(activePoint),
+                transform: "translate(-50%, calc(-100% - 18px))",
+              }}
+            >
+              <p className="eyebrow text-[10px] text-ochre">
+                {CATEGORY_META[activePoint.category].label}
+              </p>
+              <h3 className="mt-1 font-bold">{activePoint.name}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+                {activePoint.shortDescription}
+              </p>
+              {!activePoint.verified ? (
+                <p className="mt-2 text-[10px] font-semibold uppercase tracking-wider text-stone">
+                  Demonstration location - to be verified
+                </p>
+              ) : null}
+              <div className="mt-3 flex flex-wrap gap-3 text-sm font-semibold">
+                {activePoint.href ? (
+                  <a href={activePoint.href} className="text-ochre hover:text-clay">
+                    View details
+                  </a>
+                ) : null}
+                <a
+                  href={`/request-a-quote?service=safari&destination=${encodeURIComponent(activePoint.name)}`}
+                  className="text-ink hover:text-clay"
+                >
+                  Request quote
+                </a>
+              </div>
+            </div>
+          ) : null}
+
+          <div className="absolute left-3 top-3 z-30 flex overflow-hidden border border-parchment bg-ivory/95 shadow">
+            <button
+              type="button"
+              onClick={resetView}
+              className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-ink hover:bg-sand"
+            >
+              Reset
+            </button>
+            <button
+              type="button"
+              onClick={() => setZoom(z + 1)}
+              className="border-l border-parchment px-3 py-1.5 text-sm font-bold text-ink hover:bg-sand"
+              aria-label="Zoom in"
+            >
+              +
+            </button>
+            <button
+              type="button"
+              onClick={() => setZoom(z - 1)}
+              className="border-l border-parchment px-3 py-1.5 text-sm font-bold text-ink hover:bg-sand"
+              aria-label="Zoom out"
+            >
+              -
+            </button>
+          </div>
+
+          <a
+            href="https://www.openstreetmap.org/copyright"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="absolute bottom-1 right-1 z-30 bg-ivory/90 px-1.5 py-0.5 text-[10px] text-stone hover:text-ink"
+          >
+            {MAP_TILE_ATTRIBUTION}
+          </a>
+        </>
+      ) : (
+        <div className="absolute inset-0 animate-pulse bg-sand" aria-label="Map loading" />
+      )}
     </div>
   );
 }

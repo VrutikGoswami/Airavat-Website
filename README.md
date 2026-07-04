@@ -6,7 +6,7 @@ list-and-map explorer, a guided quotation flow, and honest, verifiable copy thro
 **no live booking, no fake inventory, no invented credentials.**
 
 Built with Next.js (App Router) · TypeScript · Tailwind CSS 4 · React Hook Form · Zod ·
-MapLibre GL JS · Lucide.
+OpenStreetMap raster tiles · Lucide.
 
 ---
 
@@ -31,7 +31,7 @@ npm run typecheck  # tsc --noEmit
 > script is kept only for reference and is no longer used by the build.
 
 No environment variables are required in development. Copy `.env.example` to `.env.local`
-to configure a branded map style or the canonical site URL.
+to configure branded map tiles or the canonical site URL.
 
 ---
 
@@ -46,7 +46,7 @@ components/
   layout/               SiteHeader, MobileNavigation, SiteFooter
   editorial/            PageHero, ServiceIndex, ProcessTimeline, FAQ, CTA…
   destination/          Cards, seasonality chart, filterable explorer
-  map/                  MapLibre canvas + list/map composites (client-only, lazy)
+  map/                  HTML tile map + list/map composites (client-only, lazy)
   forms/                Guided quote flow, planning starter, field primitives
   ui/                   Button, WhatsAppButton, SectionHeading, ContactLink
 config/                 companyConfig, navigation, seasonal campaigns, map provider
@@ -70,10 +70,10 @@ Key design decisions:
   opening a chat with a bracketed number.
 - **Destinations are data.** Only `published: true` destinations get pages (Mara, for now);
   the rest appear in the explorer as enquiry-first cards, avoiding thin SEO pages.
-- **Maps are isolated.** Tile provider config lives in `config/map.ts` (env-driven, with a
-  free default style). The MapLibre canvas handles loading, WebGL failure and reduced
-  motion; the accessible place list exists outside the map, so the map is never the only
-  source of location information.
+- **Maps are isolated.** Tile provider config lives in `config/map.ts` (env-driven, with
+  free OpenStreetMap tiles by default). The map is plain HTML/CSS rather than WebGL, and
+  the accessible place list exists outside the map, so the map is never the only source
+  of location information.
 - **Future integrations are seams, not fakes.** `lib/integrations` defines typed interfaces
   for Amadeus, CRM, WhatsApp Business, payments and hotel contracts. Only the in-memory
   enquiry store is implemented.
@@ -111,8 +111,9 @@ Content:
 Infrastructure:
 
 - `NEXT_PUBLIC_SITE_URL` — canonical origin for metadata/sitemap.
-- `NEXT_PUBLIC_MAP_STYLE_URL` / `NEXT_PUBLIC_MAP_PROVIDER_KEY` — branded map tiles
-  (development falls back to the free MapLibre demo style, which is low-detail).
+- `NEXT_PUBLIC_MAP_TILE_URL` / `NEXT_PUBLIC_MAP_PROVIDER_KEY` — branded map tile URL
+  template, for example `https://tiles.example.com/{z}/{x}/{y}.png?key={key}`.
+  Development falls back to OpenStreetMap raster tiles.
 - `/api/enquiries` — swap `InMemoryEnquiryStore` for a CRM/email implementation
   (`lib/integrations`). Currently submissions live in server memory only.
 - Analytics — register a real sink via `initAnalytics()` (`lib/analytics`); events are
@@ -130,7 +131,7 @@ Infrastructure:
 - [ ] Legal review of `/privacy` and `/terms`; fill bracketed gaps
 - [ ] Connect `/api/enquiries` to CRM or email so submissions reach consultants
 - [ ] Set `NEXT_PUBLIC_SITE_URL`; verify sitemap.xml and robots.txt on the production domain
-- [ ] Configure branded map tiles (`NEXT_PUBLIC_MAP_STYLE_URL`)
+- [ ] Configure branded map tiles (`NEXT_PUBLIC_MAP_TILE_URL`)
 - [ ] Wire analytics sink if wanted; verify events fire
 - [ ] Update the seasonal campaign dates/copy for the launch window
 - [ ] Add real Open Graph image
