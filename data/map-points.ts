@@ -1,92 +1,72 @@
 import type { MapPoint } from "@/types";
 
 /**
- * Demonstration map points — the single source of truth for the maps.
- *
- * Coordinates are approximate, taken from public reference maps for
- * development only: every entry is `verified: false` until the business
- * confirms it. Do not launch with unverified points. To add a location,
- * append an entry here and (if it belongs on a map) add its id to the
- * relevant id list below. Images are optional and reference /public/images.
+ * Demonstration map points. Coordinates are approximate, taken from public
+ * reference maps for development only — every entry is `verified: false`
+ * until the business confirms it. Do not launch with unverified points.
  */
 export const mapPoints: MapPoint[] = [
-  // --- Homepage destinations (Explore Kenya) ------------------------------
+  // --- Kenya overview (homepage preview) ----------------------------------
   {
     id: "nairobi",
     name: "Nairobi",
-    category: "destination",
+    category: "departure",
     latitude: -1.286,
     longitude: 36.817,
     shortDescription:
-      "Capital and gateway — international flights, city hotels and onward connections by road or air.",
-    image: "/images/dest-nairobi.jpg",
+      "Capital city and the usual starting point — international flights, city hotels and onward connections by road or air.",
     href: "/destinations",
-    destinationSlug: "nairobi",
     verified: false,
   },
   {
     id: "maasai-mara-overview",
     name: "Maasai Mara",
-    category: "destination",
+    category: "reserve",
     latitude: -1.49,
     longitude: 35.14,
     shortDescription:
-      "Kenya's best-known reserve — open savannah, big cats and the seasonal wildebeest migration.",
-    image: "/images/mara-hero.jpg",
+      "Kenya's best-known reserve. Open savannah, big cats and the seasonal wildebeest migration.",
     href: "/destinations/maasai-mara",
-    destinationSlug: "maasai-mara",
     verified: false,
   },
   {
     id: "amboseli",
     name: "Amboseli",
-    category: "destination",
+    category: "reserve",
     latitude: -2.65,
     longitude: 37.26,
     shortDescription:
-      "Elephant herds against the backdrop of Kilimanjaro — compact, photogenic and easy to combine.",
-    image: "/images/dest-amboseli.jpg",
-    href: "/destinations",
-    destinationSlug: "amboseli",
+      "Elephant herds against the backdrop of Kilimanjaro. A future destination page — enquiries welcome now.",
     verified: false,
   },
   {
     id: "naivasha",
     name: "Lake Naivasha",
-    category: "destination",
+    category: "town",
     latitude: -0.77,
     longitude: 36.35,
     shortDescription:
-      "Rift Valley lake known for boat trips and birdlife — a gentle stop between Nairobi and the Mara.",
-    image: "/images/dest-naivasha.jpg",
-    href: "/destinations",
-    destinationSlug: "naivasha",
+      "Rift Valley lake known for boat trips and birdlife. Works well as a stop between Nairobi and the Mara.",
     verified: false,
   },
   {
     id: "diani",
     name: "Diani Beach",
-    category: "destination",
+    category: "town",
     latitude: -4.28,
     longitude: 39.59,
     shortDescription:
-      "White-sand coast south of Mombasa — a popular way to end a safari with slow days by the sea.",
-    image: "/images/experience-coast.jpg",
-    href: "/destinations",
-    destinationSlug: "diani",
+      "White-sand coast south of Mombasa. A popular way to end a safari with a few slow days by the sea.",
     verified: false,
   },
   {
     id: "mombasa",
     name: "Mombasa",
-    category: "destination",
+    category: "town",
     latitude: -4.05,
     longitude: 39.67,
     shortDescription:
       "Coastal hub with direct domestic flights, old-town history and access to north and south coast stays.",
-    image: "/images/dest-mombasa.jpg",
-    href: "/destinations",
-    destinationSlug: "mombasa",
     verified: false,
   },
 
@@ -99,8 +79,6 @@ export const mapPoints: MapPoint[] = [
     longitude: 35.14,
     shortDescription:
       "The core protected area. Classic open plains and the highest density of game drives.",
-    image: "/images/mara-plains.jpg",
-    destinationSlug: "maasai-mara",
     verified: false,
   },
   {
@@ -111,8 +89,6 @@ export const mapPoints: MapPoint[] = [
     longitude: 34.98,
     shortDescription:
       "The quieter western third of the reserve, managed separately, with dramatic escarpment views.",
-    image: "/images/mara-plains.jpg",
-    destinationSlug: "maasai-mara",
     verified: false,
   },
   {
@@ -123,8 +99,6 @@ export const mapPoints: MapPoint[] = [
     longitude: 35.03,
     shortDescription:
       "The river the migration must cross. Crossing points shift with the herds — sightings are never guaranteed.",
-    image: "/images/mara-river.jpg",
-    destinationSlug: "maasai-mara",
     verified: false,
   },
   {
@@ -135,7 +109,6 @@ export const mapPoints: MapPoint[] = [
     longitude: 35.36,
     shortDescription:
       "The main eastern entry gate for road arrivals from Nairobi via Narok.",
-    destinationSlug: "maasai-mara",
     verified: false,
   },
   {
@@ -146,8 +119,6 @@ export const mapPoints: MapPoint[] = [
     longitude: 35.22,
     shortDescription:
       "Staging village at the Talek Gate with a wide range of camps close to central game-viewing areas.",
-    image: "/images/experience-conservancy.jpg",
-    destinationSlug: "maasai-mara",
     verified: false,
   },
   {
@@ -158,8 +129,6 @@ export const mapPoints: MapPoint[] = [
     longitude: 35.257,
     shortDescription:
       "One of several Mara airstrips served by scheduled light aircraft from Nairobi Wilson.",
-    image: "/images/experience-flyin.jpg",
-    destinationSlug: "maasai-mara",
     verified: false,
   },
   {
@@ -170,8 +139,6 @@ export const mapPoints: MapPoint[] = [
     longitude: 35.25,
     shortDescription:
       "Community-owned conservancies bordering the reserve, with lower vehicle densities and walking options.",
-    image: "/images/experience-conservancy.jpg",
-    destinationSlug: "maasai-mara",
     verified: false,
   },
   {
@@ -182,13 +149,10 @@ export const mapPoints: MapPoint[] = [
     longitude: 36.817,
     shortDescription:
       "Road safaris depart Nairobi and reach the Mara in roughly a day's drive; fly-in guests use Wilson Airport.",
-    image: "/images/dest-nairobi.jpg",
-    destinationSlug: "maasai-mara",
     verified: false,
   },
 ];
 
-/** The six destinations shown on the homepage "Explore Kenya" map. */
 export const kenyaOverviewPointIds = [
   "nairobi",
   "maasai-mara-overview",
@@ -198,7 +162,6 @@ export const kenyaOverviewPointIds = [
   "mombasa",
 ];
 
-/** Locations shown on the Maasai Mara destination-page explorer. */
 export const maraPointIds = [
   "mara-national-reserve",
   "mara-triangle",

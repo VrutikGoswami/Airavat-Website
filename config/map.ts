@@ -1,22 +1,7 @@
 /**
- * Tile-provider configuration and map metadata, kept apart from the MapLibre
- * component so (a) the provider can change without touching UI code and
- * (b) the list/legend can render on the server without pulling maplibre-gl
- * into the initial bundle.
+ * Tile-provider configuration, kept apart from map components so the
+ * provider can change without touching UI code.
  */
-import type { MapPointCategory } from "@/types";
-
-/** Marker + legend colours per location category (brand palette). */
-export const CATEGORY_META: Record<MapPointCategory, { label: string; color: string }> = {
-  destination: { label: "Destination", color: "#B4531F" },
-  reserve: { label: "Reserve", color: "#6E4A2A" },
-  conservancy: { label: "Conservancy", color: "#4A5A40" },
-  gate: { label: "Gate", color: "#26221B" },
-  airstrip: { label: "Airstrip", color: "#7C8FA0" },
-  town: { label: "Town / staging", color: "#8A8273" },
-  experience: { label: "Experience area", color: "#C08A2E" },
-  departure: { label: "Departure point", color: "#93441A" },
-};
 
 const FALLBACK_STYLE_URL = "https://demotiles.maplibre.org/style.json";
 
