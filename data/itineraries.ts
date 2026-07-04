@@ -13,7 +13,7 @@ export const itineraryIdeas: ItineraryIdea[] = [
     style: "comfort",
     summary:
       "A focused Mara stay timed for the migration months, with daily game drives and an optional balloon flight. Fly-in or road, depending on your time and budget.",
-    image: "/images/itinerary-mara.svg",
+    image: "/images/itinerary-mara.jpg",
     destinationSlugs: ["maasai-mara"],
     travellerTypes: ["couple", "friends", "solo"],
     bestMonths: ["jul", "aug", "sep", "oct"],
@@ -26,7 +26,7 @@ export const itineraryIdeas: ItineraryIdea[] = [
     style: "comfort",
     summary:
       "A night or two in Nairobi — giraffe centre, good restaurants, time to land — then out to the Mara for three nights of game viewing.",
-    image: "/images/itinerary-nairobi-mara.svg",
+    image: "/images/itinerary-nairobi-mara.jpg",
     destinationSlugs: ["maasai-mara", "nairobi"],
     travellerTypes: ["couple", "family", "solo"],
     bestMonths: ["jan", "feb", "jun", "jul", "aug", "sep", "oct"],
@@ -39,7 +39,7 @@ export const itineraryIdeas: ItineraryIdea[] = [
     style: "premium",
     summary:
       "The classic combination: big-sky safari first, then a direct light-aircraft connection to the Indian Ocean for slow days on the sand.",
-    image: "/images/itinerary-coast.svg",
+    image: "/images/itinerary-coast.jpg",
     destinationSlugs: ["maasai-mara", "diani"],
     travellerTypes: ["couple", "family", "friends"],
     bestMonths: ["jan", "feb", "jul", "aug", "sep", "oct"],
@@ -52,7 +52,7 @@ export const itineraryIdeas: ItineraryIdea[] = [
     style: "comfort",
     summary:
       "A gentler road route built around children: short driving days, a boat trip on Naivasha, family rooms in the Mara and flexible mealtimes.",
-    image: "/images/itinerary-family.svg",
+    image: "/images/itinerary-family.jpg",
     destinationSlugs: ["maasai-mara", "naivasha"],
     travellerTypes: ["family"],
     bestMonths: ["apr", "jul", "aug", "dec"],
@@ -65,7 +65,7 @@ export const itineraryIdeas: ItineraryIdea[] = [
     style: "value",
     summary:
       "Flights, hotels near your meetings, airport pickups and a single point of contact for changes — arranged per trip or as ongoing support.",
-    image: "/images/itinerary-corporate.svg",
+    image: "/images/itinerary-corporate.jpg",
     destinationSlugs: ["nairobi"],
     travellerTypes: ["business"],
     bestMonths: ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"],

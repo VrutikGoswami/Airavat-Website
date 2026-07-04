@@ -73,7 +73,7 @@ export default async function DestinationPage({
 
       <PageHero
         image={destination.heroImage}
-        imageAlt={`${destination.name} landscape — illustrative placeholder image`}
+        imageAlt={`${destination.name} landscape`}
         eyebrow={destination.eyebrow}
         title={destination.name}
         lede={destination.summary}
@@ -139,7 +139,7 @@ export default async function DestinationPage({
             <div key={image} className={`img-frame relative ${i === 0 ? "aspect-[4/3]" : "aspect-[3/2]"}`}>
               <Image
                 src={image}
-                alt={`${destination.name} scene ${i + 1} — illustrative placeholder image`}
+                alt={`${destination.name} scene ${i + 1}`}
                 fill
                 sizes="(min-width: 1024px) 38vw, 92vw"
                 className="object-cover"

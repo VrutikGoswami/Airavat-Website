@@ -15,8 +15,8 @@ export default function AboutPage() {
   return (
     <>
       <PageHero
-        image="/images/dest-nairobi.svg"
-        imageAlt="Nairobi at dusk — illustrative placeholder image"
+        image="/images/dest-nairobi.jpg"
+        imageAlt="Nairobi at dusk"
         eyebrow="About us"
         title="Small team. Full itineraries. Straight answers."
         lede={companyConfig.description}

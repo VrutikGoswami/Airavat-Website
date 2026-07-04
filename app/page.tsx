@@ -54,7 +54,7 @@ export default function HomePage() {
       <section className="relative flex min-h-svh items-end overflow-hidden bg-forest-deep text-cream">
         <Image
           src={campaign?.image ?? mara.heroImage}
-          alt="Savannah plains at dusk with acacia trees and wildebeest — illustrative placeholder image"
+          alt="Savannah plains at dusk with acacia trees and wildebeest"
           fill
           priority
           sizes="100vw"
@@ -145,8 +145,8 @@ export default function HomePage() {
           <div className="container-site grid gap-10 py-16 sm:py-20 lg:grid-cols-[1.25fr_1fr] lg:gap-16 lg:py-28">
             <div className="img-frame relative order-2 min-h-72 lg:order-1 lg:min-h-full">
               <Image
-                src="/images/mara-plains.svg"
-                alt="Wildebeest herd crossing open Mara plains — illustrative placeholder image"
+                src="/images/mara-plains.jpg"
+                alt="Wildebeest herd crossing open Mara plains"
                 fill
                 sizes="(min-width: 1024px) 55vw, 92vw"
                 className="object-cover"

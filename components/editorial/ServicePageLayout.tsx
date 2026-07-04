@@ -37,7 +37,7 @@ export function ServicePageLayout({ service }: { service: Service }) {
     <>
       <PageHero
         image={service.heroImage}
-        imageAlt={`${service.name} — illustrative placeholder image`}
+        imageAlt={`${service.name}`}
         eyebrow={service.eyebrow}
         title={service.headline}
         lede={service.summary}

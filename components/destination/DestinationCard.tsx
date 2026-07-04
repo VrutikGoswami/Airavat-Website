@@ -17,7 +17,7 @@ export function DestinationCard({ destination }: { destination: Destination }) {
       <div className="img-frame relative aspect-[4/3]">
         <Image
           src={destination.heroImage}
-          alt={`${destination.name} — illustrative placeholder image`}
+          alt={`${destination.name}`}
           fill
           sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 90vw"
           className="object-cover"

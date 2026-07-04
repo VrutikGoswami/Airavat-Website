@@ -9,7 +9,7 @@ export const services: Service[] = [
     headline: "Flight options found by a person, not a search box",
     summary:
       "One-way, return or multi-city — we search current fares through our airline systems and send you options with the trade-offs explained, then handle ticketing and changes.",
-    heroImage: "/images/service-flights.svg",
+    heroImage: "/images/service-flights.jpg",
     requestables: [
       "Domestic and international tickets",
       "One-way, return and multi-city routings",
@@ -49,7 +49,7 @@ export const services: Service[] = [
     headline: "The right room, not just any room",
     summary:
       "City hotels, beach resorts, safari lodges and apartments — shortlisted for your budget and reason for travel, and confirmed directly with the property.",
-    heroImage: "/images/service-hotels.svg",
+    heroImage: "/images/service-hotels.jpg",
     requestables: [
       "Hotels in Kenya and internationally",
       "Family rooms and multi-room configurations",
@@ -89,7 +89,7 @@ export const services: Service[] = [
     headline: "Safaris built around your dates, not a brochure",
     summary:
       "Private and small-group safaris across Kenya — the Mara first among them — with vehicles, guides, park logistics and accommodation coordinated as one plan.",
-    heroImage: "/images/mara-plains.svg",
+    heroImage: "/images/mara-plains.jpg",
     requestables: [
       "Maasai Mara safaris, road or fly-in",
       "Multi-park Kenya itineraries",
@@ -129,7 +129,7 @@ export const services: Service[] = [
     headline: "A vehicle and driver you can rely on",
     summary:
       "Airport pickups, hotel transfers, chauffeured days and multi-day overland transport — arranged with vetted drivers and confirmed timings.",
-    heroImage: "/images/service-transport.svg",
+    heroImage: "/images/service-transport.jpg",
     requestables: [
       "Airport transfers in Nairobi and Mombasa",
       "Hotel-to-hotel transfers",
@@ -169,7 +169,7 @@ export const services: Service[] = [
     headline: "One quotation for the whole holiday",
     summary:
       "Flights, stays, transfers and activities planned together, priced together and managed by one consultant from first idea to your return home.",
-    heroImage: "/images/itinerary-coast.svg",
+    heroImage: "/images/itinerary-coast.jpg",
     requestables: [
       "Complete Kenya holidays",
       "Safari and coast combinations",
@@ -209,7 +209,7 @@ export const services: Service[] = [
     headline: "Business travel with one point of contact",
     summary:
       "Flights, hotels near the work, airport transfers and fast changes — handled by a consultant who learns how your organisation travels.",
-    heroImage: "/images/service-corporate.svg",
+    heroImage: "/images/service-corporate.jpg",
     requestables: [
       "Business flights, including short-notice tickets",
       "Hotels near offices, sites and venues",
@@ -249,7 +249,7 @@ export const services: Service[] = [
     headline: "Group logistics, quietly handled",
     summary:
       "Schools, companies, faith groups and celebrations — seat blocks, room blocks, coach transport and a coordinator who keeps every name on the right list.",
-    heroImage: "/images/service-group.svg",
+    heroImage: "/images/service-group.jpg",
     requestables: [
       "School and university trips",
       "Company retreats and incentive travel",

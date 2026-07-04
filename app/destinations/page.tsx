@@ -15,8 +15,8 @@ export default function DestinationsPage() {
   return (
     <>
       <PageHero
-        image="/images/mara-plains.svg"
-        imageAlt="Open savannah with wildebeest and acacia trees — illustrative placeholder image"
+        image="/images/mara-plains.jpg"
+        imageAlt="Open savannah with wildebeest and acacia trees"
         eyebrow="Destinations"
         title="Start with a place, or start with a feeling"
         lede="Our destination list is a starting point, not a limit — we arrange travel across Kenya, East Africa and internationally. Filter below, or tell us what you're imagining and we'll suggest where it lives."

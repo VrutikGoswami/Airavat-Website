@@ -12,8 +12,8 @@ export default function PrivacyPage() {
   return (
     <>
       <PageHero
-        image="/images/dest-naivasha.svg"
-        imageAlt="Calm lake scene — illustrative placeholder image"
+        image="/images/dest-naivasha.jpg"
+        imageAlt="Calm lake scene"
         eyebrow="Legal"
         title="Privacy Policy"
         lede="Draft for review — this text must be checked by a qualified professional against Kenya's Data Protection Act, 2019 before launch."

@@ -14,8 +14,8 @@ export default function RequestAQuotePage() {
   return (
     <>
       <PageHero
-        image="/images/itinerary-nairobi-mara.svg"
-        imageAlt="Nairobi skyline giving way to savannah at dusk — illustrative placeholder image"
+        image="/images/itinerary-nairobi-mara.jpg"
+        imageAlt="Nairobi skyline giving way to savannah at dusk"
         eyebrow="Request a quote"
         title="Tell us the trip. We'll come back with real options."
         lede="Seven short steps, and “I'm not sure yet” is an acceptable answer to most of them. A consultant reviews every enquiry personally."

@@ -24,8 +24,11 @@ npm run build      # production build
 npm run start      # serve the production build
 npm run lint       # eslint
 npm run typecheck  # tsc --noEmit
-node scripts/generate-images.mjs   # regenerate placeholder SVG imagery
 ```
+
+> `scripts/generate-images.mjs` originally generated placeholder SVG scenes. The
+> site now ships real licensed photography (see "Image replacement" below); the
+> script is kept only for reference and is no longer used by the build.
 
 No environment variables are required in development. Copy `.env.example` to `.env.local`
 to configure a branded map style or the canonical site URL.
@@ -90,9 +93,12 @@ Company identity — all in `config/company.ts`:
 
 Content:
 
-- **Imagery** — every file in `public/images/` is a generated SVG illustration
-  (see `scripts/generate-images.mjs`). Replace with licensed photography, update `alt`
-  text, then remove `dangerouslyAllowSVG` from `next.config.ts`.
+- **Imagery** — every file in `public/images/` is real photography sourced from
+  [Unsplash](https://unsplash.com) (Unsplash License: free for commercial use, no
+  attribution required), served locally as optimised JPGs. Swap individual files
+  for final brand/owned photography before launch, keeping the same filenames (or
+  update the references in `data/`, `config/` and the page heroes), and review the
+  `alt` text for each.
 - **Testimonials** — `data/testimonials.ts` entries are labelled samples; replace with
   permission-cleared feedback and set `isSample: false`.
 - **Map points** — all coordinates in `data/map-points.ts` are `verified: false`
@@ -118,7 +124,7 @@ Infrastructure:
 ## Pre-launch checklist
 
 - [ ] Replace every `config/company.ts` placeholder and confirm WhatsApp deep links open the right account
-- [ ] Replace placeholder SVGs with licensed photography (check alt text + image `sizes`)
+- [ ] Swap the Unsplash demo photography for final brand/owned images (check alt text + image `sizes`)
 - [ ] Verify all map coordinates; set `verified: true` per point
 - [ ] Replace sample testimonials or remove the section
 - [ ] Legal review of `/privacy` and `/terms`; fill bracketed gaps

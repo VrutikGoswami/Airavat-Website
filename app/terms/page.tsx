@@ -50,8 +50,8 @@ export default function TermsPage() {
   return (
     <>
       <PageHero
-        image="/images/service-corporate.svg"
-        imageAlt="City skyline at night — illustrative placeholder image"
+        image="/images/service-corporate.jpg"
+        imageAlt="City skyline at night"
         eyebrow="Legal"
         title="Terms & Booking Conditions"
         lede="Draft for review — to be finalised with professional legal advice before launch. Written to be read, not skimmed."

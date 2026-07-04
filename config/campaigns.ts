@@ -19,7 +19,7 @@ export const seasonalCampaigns: SeasonalCampaign[] = [
       "Plan a tailor-made Mara safari with accommodation, transport and optional flight coordination.",
     startDate: "2026-07-01",
     endDate: "2026-10-31",
-    image: "/images/mara-hero.svg",
+    image: "/images/mara-hero.jpg",
     primaryCta: {
       label: "Plan a Maasai Mara safari",
       href: "/request-a-quote?service=safari&destination=maasai-mara",

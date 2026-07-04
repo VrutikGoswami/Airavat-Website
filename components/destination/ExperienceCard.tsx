@@ -7,7 +7,7 @@ export function ExperienceCard({ experience }: { experience: Experience }) {
       <div className="img-frame relative aspect-[5/4]">
         <Image
           src={experience.image}
-          alt={`${experience.name} — illustrative placeholder image`}
+          alt={`${experience.name}`}
           fill
           sizes="(min-width: 1024px) 22vw, (min-width: 640px) 45vw, 85vw"
           className="object-cover"

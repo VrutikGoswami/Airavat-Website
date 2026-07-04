@@ -21,11 +21,11 @@ export const destinations: Destination[] = [
       "That is why we start with questions rather than a package list. Your dates, your budget band and who is travelling decide whether we propose a road safari through the Rift Valley or a light-aircraft hop from Nairobi Wilson, a tented camp near Talek or a quieter conservancy stay to the north.",
       "Our consultants check current camp availability and park logistics before quoting anything, so what you receive is an option you can actually take — not a stock itinerary with a price that changes later.",
     ],
-    heroImage: "/images/mara-hero.svg",
+    heroImage: "/images/mara-hero.jpg",
     gallery: [
-      "/images/mara-plains.svg",
-      "/images/experience-balloon.svg",
-      "/images/mara-river.svg",
+      "/images/mara-plains.jpg",
+      "/images/experience-balloon.jpg",
+      "/images/mara-river.jpg",
     ],
     idealFor: [
       "First safaris",
@@ -127,7 +127,7 @@ export const destinations: Destination[] = [
     summary:
       "Large elephant herds crossing dusty flats with Kilimanjaro on the horizon. Compact, photogenic and easy to combine with the Mara or the coast.",
     narrative: [],
-    heroImage: "/images/dest-amboseli.svg",
+    heroImage: "/images/dest-amboseli.jpg",
     gallery: [],
     idealFor: ["Photography", "Short safaris", "Mara add-ons"],
     quickFacts: [],
@@ -164,7 +164,7 @@ export const destinations: Destination[] = [
     summary:
       "Kenya's best-known beach: reef-protected swimming, barefoot restaurants and direct light-aircraft links that make safari-and-coast trips simple.",
     narrative: [],
-    heroImage: "/images/itinerary-coast.svg",
+    heroImage: "/images/itinerary-coast.jpg",
     gallery: [],
     idealFor: ["Honeymoons", "Families", "Safari–coast combinations"],
     quickFacts: [],
@@ -201,7 +201,7 @@ export const destinations: Destination[] = [
     summary:
       "Boat trips among hippos and fish eagles, cycling in Hell's Gate and green lakeside lodges — an easy first stop between Nairobi and the Mara.",
     narrative: [],
-    heroImage: "/images/dest-naivasha.svg",
+    heroImage: "/images/dest-naivasha.jpg",
     gallery: [],
     idealFor: ["Families", "Road safaris", "Weekend breaks"],
     quickFacts: [],
@@ -238,7 +238,7 @@ export const destinations: Destination[] = [
     summary:
       "More than a stopover: a national park minutes from the CBD, strong restaurants and hotels for every budget — and the hub all Kenyan trips pass through.",
     narrative: [],
-    heroImage: "/images/dest-nairobi.svg",
+    heroImage: "/images/dest-nairobi.jpg",
     gallery: [],
     idealFor: ["Business travel", "Stopovers", "Trip starts"],
     quickFacts: [],
@@ -275,7 +275,7 @@ export const destinations: Destination[] = [
     summary:
       "Old Town lanes, Fort Jesus and a string of resort beaches north of the island — with direct domestic flights that suit shorter coast breaks.",
     narrative: [],
-    heroImage: "/images/dest-mombasa.svg",
+    heroImage: "/images/dest-mombasa.jpg",
     gallery: [],
     idealFor: ["Beach breaks", "Culture", "Conferences"],
     quickFacts: [],

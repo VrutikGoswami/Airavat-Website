@@ -16,8 +16,8 @@ export default function ContactPage() {
   return (
     <>
       <PageHero
-        image="/images/service-transport.svg"
-        imageAlt="City street scene — illustrative placeholder image"
+        image="/images/service-transport.jpg"
+        imageAlt="City street scene"
         eyebrow="Contact"
         title="Talk to a person about your trip"
         lede="For anything with dates and details, the quotation form gives our consultants the best head start. For everything else, the channels below reach the same small team."

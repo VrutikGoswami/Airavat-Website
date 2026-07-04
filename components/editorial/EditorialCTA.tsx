@@ -22,7 +22,7 @@ export function EditorialCTA({
   primaryHref,
   whatsappContext,
   trackingSource,
-  image = "/images/mara-hero.svg",
+  image = "/images/mara-hero.jpg",
 }: Props) {
   return (
     <section className="relative overflow-hidden bg-forest-deep text-cream">

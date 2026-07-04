@@ -29,8 +29,8 @@ export default function FAQPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
       <PageHero
-        image="/images/experience-conservancy.svg"
-        imageAlt="Tented camp on the savannah — illustrative placeholder image"
+        image="/images/experience-conservancy.jpg"
+        imageAlt="Tented camp on the savannah"
         eyebrow="FAQ"
         title="Questions, answered plainly"
         lede="Everything here reflects how we actually work. If your question isn't covered, ask it on WhatsApp — that's what we're for."

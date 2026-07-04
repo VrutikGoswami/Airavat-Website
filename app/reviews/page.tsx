@@ -14,8 +14,8 @@ export default function ReviewsPage() {
   return (
     <>
       <PageHero
-        image="/images/experience-dining.svg"
-        imageAlt="Bush dinner under the stars — illustrative placeholder image"
+        image="/images/experience-dining.jpg"
+        imageAlt="Bush dinner under the stars"
         eyebrow="Reviews"
         title="Real feedback only — which is why this page is honest about being new"
         lede="We publish reviews with the traveller's permission, exactly as given. Until launch, the entries below are clearly-labelled samples that show how this page will work."
