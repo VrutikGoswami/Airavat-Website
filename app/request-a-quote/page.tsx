@@ -7,7 +7,7 @@ import { WhatsAppButton } from "@/components/ui/WhatsAppButton";
 export const metadata: Metadata = {
   title: "Request a Travel Quote",
   description:
-    "Tell us what you need — flights, hotels, safaris, transport or a complete holiday — and a travel consultant will reply with current options and prices. An enquiry, not a booking.",
+    "Start a short travel enquiry for flights, hotels, safaris, groups or holidays. A consultant replies with current options.",
 };
 
 export default function RequestAQuotePage() {
@@ -17,8 +17,8 @@ export default function RequestAQuotePage() {
         image="/images/itinerary-nairobi-mara.jpg"
         imageAlt="Nairobi skyline giving way to savannah at dusk"
         eyebrow="Request a quote"
-        title="Tell us the trip. We'll come back with real options."
-        lede="Seven short steps, and “I'm not sure yet” is an acceptable answer to most of them. A consultant reviews every enquiry personally."
+        title="Start a 2-minute enquiry."
+        lede="Tell us the basics. We will reply with current options for your dates and budget."
         size="compact"
       />
 
@@ -33,10 +33,9 @@ export default function RequestAQuotePage() {
           <div className="border border-parchment bg-sand/50 p-6">
             <h2 className="font-bold">What happens next</h2>
             <ol className="mt-4 list-decimal space-y-2.5 pl-5 text-sm leading-relaxed text-ink-soft">
-              <li>Your enquiry reaches a travel consultant — a person, not a queue.</li>
-              <li>We check current fares, rooms and availability with suppliers.</li>
-              <li>You receive clear options to compare, usually with alternatives.</li>
-              <li>Nothing is booked until you approve a quotation and payment is agreed.</li>
+              <li>We review your request.</li>
+              <li>We send current options.</li>
+              <li>You approve before anything is booked.</li>
             </ol>
           </div>
           <div className="border border-parchment p-6">

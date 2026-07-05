@@ -100,7 +100,7 @@ export function SiteHeader() {
             className="border-[#25D366]/70 bg-[#25D366]/15 text-[#075E54] hover:border-[#25D366] hover:bg-[#25D366] hover:text-ink"
           />
           <ButtonLink href="/request-a-quote" variant="dark">
-            Request a Quote
+            Get a Quote
           </ButtonLink>
         </div>
 

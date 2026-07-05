@@ -154,7 +154,7 @@ export function MobileNavigation({ solidHeader }: { solidHeader: boolean }) {
 
             <div className="mt-auto space-y-3 pt-10">
               <ButtonLink href="/request-a-quote" variant="primary" size="lg" className="w-full">
-                Request a Quote
+                Get a Quote
               </ButtonLink>
               <WhatsAppButton
                 trackingSource="mobile-nav"
