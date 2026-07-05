@@ -51,7 +51,7 @@ export default async function DestinationPage({
   const experiences = getExperiences(destination.experienceIds);
   const itineraries = getItineraries(destination.itinerarySlugs);
   const mapPoints = getMapPoints(destination.mapPointIds);
-  const destinationFaqs = getFaqs(destination.faqIds);
+  const destinationFaqs = getFaqs(destination.faqIds).slice(0, 3);
   const quoteHref = `/request-a-quote?service=safari&destination=${destination.slug}`;
 
   const breadcrumbJsonLd = {
@@ -108,8 +108,29 @@ export default async function DestinationPage({
         </ol>
       </nav>
 
+      <nav aria-label={`${destination.name} sections`} className="container-site pt-6">
+        <ul className="flex flex-wrap gap-2 text-sm font-semibold">
+          {[
+            ["#overview", "Overview"],
+            ["#when-to-go", "When to go"],
+            ["#map", "Map"],
+            ["#stays", "Stays"],
+            ["#trip-ideas", "Trip ideas"],
+          ].map(([href, label]) => (
+            <li key={href}>
+              <Link
+                href={href}
+                className="inline-flex rounded-[3px] border border-parchment px-3 py-2 hover:border-ochre hover:text-clay"
+              >
+                {label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
       {/* Quick planning facts */}
-      <section className="container-site py-12 sm:py-16">
+      <section id="overview" className="container-site scroll-mt-24 py-12 sm:py-16">
         <dl className="grid gap-x-10 gap-y-6 border-y border-parchment py-8 sm:grid-cols-2 lg:grid-cols-3">
           {destination.quickFacts.map((fact) => (
             <div key={fact.label}>
@@ -122,6 +143,20 @@ export default async function DestinationPage({
           Planning guidance, not guarantees — travel times, fees and conditions are confirmed by a
           consultant for your dates.
         </p>
+      </section>
+
+      {/* Map */}
+      <section id="map" className="rule-top scroll-mt-24">
+        <div className="container-site py-16 sm:py-20">
+          <SectionHeading
+            eyebrow="Orientation"
+            title={`The ${destination.name} map`}
+            lede="Select a place in the list or on the map to see how it fits your trip. Every location is also available as text below."
+          />
+          <div className="mt-10">
+            <LazyMaraMapExplorer points={mapPoints} />
+          </div>
+        </div>
       </section>
 
       {/* Narrative */}
@@ -151,7 +186,7 @@ export default async function DestinationPage({
 
       {/* Seasonal story */}
       {destination.seasonalStory ? (
-        <section className="bg-forest text-cream">
+        <section id="when-to-go" className="scroll-mt-24 bg-forest text-cream">
           <div className="container-site grid gap-12 py-16 sm:py-20 lg:grid-cols-[1fr_1.3fr] lg:gap-20">
             <div>
               <SectionHeading
@@ -186,7 +221,7 @@ export default async function DestinationPage({
           lede="Each of these can be built into your quotation — tell us which appeal and we'll plan around them."
         />
         <ul className="mt-12 grid gap-x-7 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
-          {experiences.map((experience) => (
+          {experiences.slice(0, 4).map((experience) => (
             <li key={experience.id}>
               <ExperienceCard experience={experience} />
             </li>
@@ -196,7 +231,7 @@ export default async function DestinationPage({
 
       {/* Accommodation styles */}
       {destination.accommodationStyles.length > 0 ? (
-        <section className="bg-sand/60">
+        <section id="stays" className="scroll-mt-24 bg-sand/60">
           <div className="container-site py-16 sm:py-20">
             <SectionHeading
               eyebrow="Places to stay"
@@ -223,7 +258,7 @@ export default async function DestinationPage({
 
       {/* Itinerary ideas */}
       {itineraries.length > 0 ? (
-        <section className="container-site py-16 sm:py-20">
+        <section id="trip-ideas" className="container-site scroll-mt-24 py-16 sm:py-20">
           <SectionHeading
             eyebrow="Itinerary ideas"
             title="Three ways this trip tends to take shape"
@@ -238,20 +273,6 @@ export default async function DestinationPage({
           </ul>
         </section>
       ) : null}
-
-      {/* Full map */}
-      <section id="map" className="rule-top scroll-mt-24">
-        <div className="container-site py-16 sm:py-20">
-          <SectionHeading
-            eyebrow="Orientation"
-            title={`The ${destination.name} map`}
-            lede="Reserve areas, gates, airstrips and staging points — select a place in the list or on the map to see how it fits your trip. Every location is also available as text below."
-          />
-          <div className="mt-10">
-            <LazyMaraMapExplorer points={mapPoints} />
-          </div>
-        </div>
-      </section>
 
       {/* FAQ */}
       {destinationFaqs.length > 0 ? (
