@@ -8,12 +8,11 @@ import type { Destination } from "@/types";
  * into the quote flow with the destination preselected (no thin pages).
  */
 export function DestinationCard({ destination }: { destination: Destination }) {
-  const href = destination.published
-    ? `/destinations/${destination.slug}`
-    : `/request-a-quote?service=safari&destination=${destination.slug}`;
+  const exploreHref = destination.published ? `/destinations/${destination.slug}` : "/destinations";
+  const planHref = `/request-a-quote?service=safari&destination=${destination.slug}`;
 
   return (
-    <Link href={href} className="group block">
+    <article className="group block">
       <div className="img-frame relative aspect-[4/3]">
         <Image
           src={destination.heroImage}
@@ -37,12 +36,17 @@ export function DestinationCard({ destination }: { destination: Destination }) {
           <p className="mt-2 line-clamp-2 max-w-md text-sm leading-relaxed text-ink-soft">
             {destination.summary}
           </p>
-          <p className="mt-3 text-sm font-semibold text-ochre">
-            {destination.published ? "Explore destination" : "Enquire about this destination"}
-            <ArrowRight aria-hidden className="ml-1 inline size-4" />
-          </p>
+          <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm font-semibold">
+            <Link href={exploreHref} className="text-ink underline underline-offset-4 hover:text-clay">
+              Explore
+            </Link>
+            <Link href={planHref} className="text-ochre underline underline-offset-4 hover:text-clay">
+              Plan this trip
+              <ArrowRight aria-hidden className="ml-1 inline size-4" />
+            </Link>
+          </div>
         </div>
       </div>
-    </Link>
+    </article>
   );
 }

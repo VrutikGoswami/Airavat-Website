@@ -51,7 +51,7 @@ export function ItineraryCard({ idea }: { idea: ItineraryIdea }) {
         </p>
         <div className="mt-4 flex gap-5 text-sm font-semibold">
           <Link
-            href={`/request-a-quote?service=${idea.travellerTypes.includes("business") ? "corporate" : "holiday-package"}&destination=${idea.destinationSlugs[0] ?? ""}&idea=${idea.slug}`}
+            href={`/request-a-quote?service=${idea.travellerTypes.includes("business") ? "corporate" : "holiday-package"}&destination=${idea.destinationSlugs[0] ?? ""}&itinerary=${idea.slug}`}
             className="text-ochre underline underline-offset-4 hover:text-clay"
             onClick={() => track("itinerary_viewed", { idea: idea.slug })}
           >

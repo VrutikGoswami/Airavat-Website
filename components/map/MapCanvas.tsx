@@ -238,6 +238,9 @@ export function MapCanvas({
               <p className="mt-2 text-sm leading-relaxed text-ink-soft">
                 {activePoint.shortDescription}
               </p>
+              <p className="mt-2 text-xs leading-relaxed text-stone">
+                Useful for {CATEGORY_META[activePoint.category].label.toLowerCase()} planning.
+              </p>
               {!activePoint.verified ? (
                 <p className="mt-2 text-[10px] font-semibold uppercase tracking-wider text-stone">
                   Demonstration location - to be verified
@@ -253,7 +256,7 @@ export function MapCanvas({
                   href={`/request-a-quote?service=safari&destination=${encodeURIComponent(activePoint.name)}`}
                   className="text-ink hover:text-clay"
                 >
-                  Request quote
+                  Add to my trip
                 </a>
               </div>
             </div>
