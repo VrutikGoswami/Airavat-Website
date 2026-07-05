@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { destinations } from "@/data/destinations";
-import { experiences } from "@/data/experiences";
 import { DestinationExplorer } from "@/components/destination/DestinationExplorer";
 import { PageHero } from "@/components/editorial/PageHero";
 import { EditorialCTA } from "@/components/editorial/EditorialCTA";
@@ -18,11 +17,11 @@ export default function DestinationsPage() {
         image="/images/mara-plains.jpg"
         imageAlt="Open savannah with wildebeest and acacia trees"
         eyebrow="Destinations"
-        title="Start with a place, or start with a feeling"
-        lede="Our destination list is a starting point, not a limit — we arrange travel across Kenya, East Africa and internationally. Filter below, or tell us what you're imagining and we'll suggest where it lives."
+        title="Explore Kenya by trip style"
+        lede="Start with safari, beach, city or a short escape. If your place is not listed yet, send an enquiry and we will advise."
       />
       <section className="container-site py-14 sm:py-20">
-        <DestinationExplorer destinations={destinations} experiences={experiences} />
+        <DestinationExplorer destinations={destinations} />
       </section>
       <EditorialCTA
         title="Don't see your destination? We probably still arrange it."
