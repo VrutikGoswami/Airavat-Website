@@ -1,16 +1,12 @@
-import Image from "next/image";
-import Link from "next/link";
 import { Check } from "lucide-react";
 import type { Service, ServiceSlug } from "@/types";
 import { getFaqs } from "@/data/faqs";
-import { getServices } from "@/data/services";
 import { ButtonLink } from "@/components/ui/Button";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { WhatsAppButton } from "@/components/ui/WhatsAppButton";
 import { EditorialCTA } from "@/components/editorial/EditorialCTA";
 import { FAQAccordion } from "@/components/editorial/FAQAccordion";
 import { PageHero } from "@/components/editorial/PageHero";
-import { ProcessTimeline } from "@/components/editorial/ProcessTimeline";
 
 /** Which enquiry-service value each service page preselects in the quote flow. */
 const SERVICE_TO_ENQUIRY: Record<ServiceSlug, string> = {
@@ -30,8 +26,7 @@ const SERVICE_TO_ENQUIRY: Record<ServiceSlug, string> = {
  */
 export function ServicePageLayout({ service }: { service: Service }) {
   const quoteHref = `/request-a-quote?service=${SERVICE_TO_ENQUIRY[service.slug]}`;
-  const relatedServices = getServices(service.relatedServiceSlugs);
-  const serviceFaqs = getFaqs(service.faqIds);
+  const serviceFaqs = getFaqs(service.faqIds).slice(0, 3);
 
   return (
     <>
@@ -53,19 +48,23 @@ export function ServicePageLayout({ service }: { service: Service }) {
         />
       </PageHero>
 
-      {/* Editorial explanation */}
-      <section className="container-site grid gap-12 py-16 sm:py-20 lg:grid-cols-2 lg:gap-20">
-        {service.editorial.map((block) => (
-          <div key={block.title} className="max-w-xl">
-            <h2 className="display-serif text-2xl sm:text-3xl">{block.title}</h2>
-            <p className="mt-4 leading-relaxed text-ink-soft">{block.body}</p>
-          </div>
-        ))}
-      </section>
-
-      {/* Who + what */}
-      <section className="bg-sand/60">
-        <div className="container-site grid gap-12 py-16 sm:py-20 lg:grid-cols-2 lg:gap-20">
+      <section className="container-site grid gap-12 py-16 sm:py-20 lg:grid-cols-[1fr_1fr] lg:gap-20">
+        <div>
+          <SectionHeading
+            eyebrow="What we arrange"
+            title={service.shortName}
+            lede={service.summary}
+          />
+          <ul className="mt-8 space-y-3">
+            {service.requestables.map((item) => (
+              <li key={item} className="flex items-start gap-3 text-ink-soft">
+                <Check aria-hidden className="mt-1 size-4 shrink-0 text-ochre" />
+                {item}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="space-y-10">
           <div>
             <SectionHeading eyebrow="Who this is for" title="Made for travellers like…" />
             <ul className="mt-8 space-y-3">
@@ -78,9 +77,15 @@ export function ServicePageLayout({ service }: { service: Service }) {
             </ul>
           </div>
           <div>
-            <SectionHeading eyebrow="What you can request" title="Ask us to arrange" />
+            <SectionHeading eyebrow="What to send" title="The useful basics" />
             <ul className="mt-8 space-y-3">
-              {service.requestables.map((item) => (
+              {[
+                "Destination or route",
+                "Approximate dates",
+                "Number of travellers",
+                "Budget range",
+                "Any must-haves or constraints",
+              ].map((item) => (
                 <li key={item} className="flex items-start gap-3 text-ink-soft">
                   <Check aria-hidden className="mt-1 size-4 shrink-0 text-ochre" />
                   {item}
@@ -91,55 +96,14 @@ export function ServicePageLayout({ service }: { service: Service }) {
         </div>
       </section>
 
-      {/* Process */}
-      <section className="container-site grid gap-12 py-16 sm:py-20 lg:grid-cols-[1fr_1.5fr] lg:gap-20">
-        <SectionHeading
-          eyebrow="How it works"
-          title="From message to confirmed plan"
-          lede="The same assisted process applies to every service — nothing is booked until you approve it."
-        />
-        <ProcessTimeline />
-      </section>
-
-      {/* FAQ */}
       {serviceFaqs.length > 0 ? (
-        <section className="rule-top">
+        <section className="rule-top bg-sand/40">
           <div className="container-site grid gap-10 py-16 sm:py-20 lg:grid-cols-[1fr_1.6fr] lg:gap-20">
-            <SectionHeading eyebrow="Questions" title={`${service.shortName} — common questions`} />
+            <SectionHeading eyebrow="Questions" title="Useful answers" />
             <FAQAccordion items={serviceFaqs} />
           </div>
         </section>
       ) : null}
-
-      {/* Related services */}
-      <section className="bg-sand/60">
-        <div className="container-site py-14 sm:py-16">
-          <h2 className="eyebrow text-stone">Often combined with</h2>
-          <ul className="mt-6 grid gap-px overflow-hidden border border-parchment bg-parchment sm:grid-cols-3">
-            {relatedServices.map((related) => (
-              <li key={related.slug} className="bg-ivory">
-                <Link href={`/${related.slug}`} className="group flex h-full flex-col p-6 hover:bg-sand/70">
-                  <div className="img-frame relative mb-4 aspect-[5/2]">
-                    <Image
-                      src={related.heroImage}
-                      alt=""
-                      fill
-                      sizes="(min-width: 640px) 30vw, 90vw"
-                      className="object-cover"
-                    />
-                  </div>
-                  <span className="display-serif text-xl group-hover:text-clay">
-                    {related.name}
-                  </span>
-                  <span className="mt-2 text-sm leading-relaxed text-ink-soft">
-                    {related.summary.split("—")[0].trim()}
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
 
       <EditorialCTA
         title={`Ready to ${service.cta.label.toLowerCase()}?`}
