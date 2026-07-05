@@ -23,13 +23,11 @@ import {
   QUOTE_STEP_FIELDS,
   SERVICE_LABELS,
   STYLE_LABELS,
-  TRAVELLER_TYPE_LABELS,
   budgetBands,
   enquiryServices,
   quoteDefaults,
   quoteSchema,
   travelStyles,
-  travellerTypes,
   type QuoteFormValues,
 } from "@/lib/validation/quote";
 import { destinations } from "@/data/destinations";
@@ -81,6 +79,7 @@ export function GuidedQuoteForm() {
 
   const service = watch("service");
   const flexibleDates = watch("flexibleDates");
+  const children = watch("children");
   const step = QUOTE_STEPS[stepIndex];
 
   // Restore draft, then apply page-context preselection from the URL.
@@ -105,10 +104,6 @@ export function GuidedQuoteForm() {
     const whenParam = searchParams.get("when");
     if (whenParam && /^\d{4}-\d{2}-\d{2}$/.test(whenParam)) {
       setValue("departureDate", whenParam);
-    }
-    const whoParam = searchParams.get("who");
-    if (whoParam && (travellerTypes as readonly string[]).includes(whoParam)) {
-      setValue("travellerType", whoParam as QuoteFormValues["travellerType"]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -259,10 +254,10 @@ export function GuidedQuoteForm() {
       onSubmit={onSubmit}
       noValidate
       onKeyDown={(e) => {
-        // Enter advances the current step instead of submitting the whole form.
+        // Enter advances the current stage instead of submitting early.
         if (
           e.key === "Enter" &&
-          step.id !== "review" &&
+          step.id !== "contact" &&
           !(e.target instanceof HTMLTextAreaElement) &&
           !(e.target instanceof HTMLButtonElement)
         ) {
@@ -308,28 +303,24 @@ export function GuidedQuoteForm() {
       </h2>
 
       <div className="mt-7 space-y-5">
-        {/* ---------------------------------------------------------- step 1 */}
-        {step.id === "service" ? (
-          <div role="radiogroup" aria-label="Type of help" className="grid gap-3 sm:grid-cols-2">
-            {enquiryServices.map((s) => (
-              <OptionTile
-                key={s}
-                selected={service === s}
-                title={SERVICE_LABELS[s]}
-                description={
-                  s === "not-sure"
-                    ? "A consultant will help you shape the trip first."
-                    : undefined
-                }
-                onSelect={() => setValue("service", s, { shouldValidate: true })}
-              />
-            ))}
-          </div>
-        ) : null}
-
-        {/* ---------------------------------------------------------- step 2 */}
-        {step.id === "destination" ? (
+        {/* ---------------------------------------------------------- trip */}
+        {step.id === "trip" ? (
           <>
+            <div role="radiogroup" aria-label="Type of help" className="grid gap-3 sm:grid-cols-2">
+              {enquiryServices.map((s) => (
+                <OptionTile
+                  key={s}
+                  selected={service === s}
+                  title={SERVICE_LABELS[s]}
+                  description={
+                    s === "not-sure"
+                      ? "A consultant will help you shape the trip first."
+                      : undefined
+                  }
+                  onSelect={() => setValue("service", s, { shouldValidate: true })}
+                />
+              ))}
+            </div>
             <TextField
               label="Where would you like to go?"
               hint="A country, city or park is ideal — “not sure yet” is completely fine."
@@ -368,12 +359,6 @@ export function GuidedQuoteForm() {
               label="I'm open to alternative destinations if they fit better"
               {...register("flexibleDestination")}
             />
-          </>
-        ) : null}
-
-        {/* ---------------------------------------------------------- step 3 */}
-        {step.id === "dates" ? (
-          <>
             <div className="grid gap-5 sm:grid-cols-2">
               <TextField
                 label="Departure date (approximate)"
@@ -401,10 +386,10 @@ export function GuidedQuoteForm() {
           </>
         ) : null}
 
-        {/* ---------------------------------------------------------- step 4 */}
-        {step.id === "travellers" ? (
+        {/* ---------------------------------------------------------- preferences */}
+        {step.id === "preferences" ? (
           <>
-            <div className="grid gap-5 sm:grid-cols-3">
+            <div className="grid gap-5 sm:grid-cols-2">
               <TextField
                 label="Adults"
                 type="number"
@@ -423,41 +408,16 @@ export function GuidedQuoteForm() {
                 {...register("children")}
                 error={errors.children?.message}
               />
-              <TextField
-                label="Infants (under 2)"
-                type="number"
-                min={0}
-                max={20}
-                inputMode="numeric"
-                {...register("infants")}
-                error={errors.infants?.message}
-              />
             </div>
-            <SelectField
-              label="Who is travelling?"
-              {...register("travellerType")}
-              error={errors.travellerType?.message}
-            >
-              {travellerTypes.map((t) => (
-                <option key={t} value={t}>
-                  {TRAVELLER_TYPE_LABELS[t]}
-                </option>
-              ))}
-            </SelectField>
-          </>
-        ) : null}
-
-        {/* ---------------------------------------------------------- step 5 */}
-        {step.id === "details" ? (
-          <>
+            {children > 0 ? (
+              <TextField
+                label="Ages of children"
+                placeholder="e.g. 4, 8 and 12"
+                {...register("childAges")}
+                error={errors.childAges?.message}
+              />
+            ) : null}
             <div className="grid gap-5 sm:grid-cols-2">
-              <SelectField label="Travel style" {...register("style")} error={errors.style?.message}>
-                {travelStyles.map((s) => (
-                  <option key={s} value={s}>
-                    {STYLE_LABELS[s]}
-                  </option>
-                ))}
-              </SelectField>
               <SelectField
                 label="Approximate total budget"
                 hint="A band is enough — it helps us propose realistic options."
@@ -470,6 +430,17 @@ export function GuidedQuoteForm() {
                   </option>
                 ))}
               </SelectField>
+              {(service === "hotels" || service === "safari" || service === "holiday-package") ? (
+                <SelectField
+                  label="Resident status"
+                  {...register("residency")}
+                  error={errors.residency?.message}
+                >
+                  <option value="not-sure">Not sure</option>
+                  <option value="resident">Resident</option>
+                  <option value="non-resident">Non-resident</option>
+                </SelectField>
+              ) : null}
             </div>
 
             {service === "flights" ? (
@@ -493,6 +464,15 @@ export function GuidedQuoteForm() {
                     <option value="first">First</option>
                   </SelectField>
                 </div>
+                <SelectField
+                  label="Checked baggage required?"
+                  {...register("checkedBaggage")}
+                  error={errors.checkedBaggage?.message}
+                >
+                  <option value="not-sure">Not sure</option>
+                  <option value="yes">Yes</option>
+                  <option value="no">No</option>
+                </SelectField>
                 <TextField
                   label="Preferred airline"
                   required={false}
@@ -561,7 +541,14 @@ export function GuidedQuoteForm() {
             {service === "safari" || service === "holiday-package" || service === "transport" ? (
               <fieldset className="space-y-5 border-t border-parchment pt-5">
                 <legend className="eyebrow pt-5 text-ochre">Trip preferences</legend>
-                <div className="grid gap-5 sm:grid-cols-2">
+                <div className="grid gap-5 sm:grid-cols-3">
+                  <SelectField label="Travel style" {...register("style")} error={errors.style?.message}>
+                    {travelStyles.map((s) => (
+                      <option key={s} value={s}>
+                        {STYLE_LABELS[s]}
+                      </option>
+                    ))}
+                  </SelectField>
                   <SelectField
                     label="Road or fly-in?"
                     {...register("accessPreference")}
@@ -572,7 +559,7 @@ export function GuidedQuoteForm() {
                     <option value="fly-in">Fly-in</option>
                   </SelectField>
                   <SelectField
-                    label="Accommodation style"
+                    label="Accommodation category"
                     {...register("accommodationStyle")}
                     error={errors.accommodationStyle?.message}
                   >
@@ -589,7 +576,7 @@ export function GuidedQuoteForm() {
                     <CheckboxField label="Flights" {...register("includeFlights")} />
                     <CheckboxField label="Hotel or camp" {...register("includeAccommodation")} />
                     <CheckboxField label="Airport transfers" {...register("includeTransfers")} />
-                    <CheckboxField label="Daily transport" {...register("includeDailyTransport")} />
+                    <CheckboxField label="Transport during the trip" {...register("includeDailyTransport")} />
                   </div>
                 </fieldset>
                 <TextAreaField
@@ -658,24 +645,18 @@ export function GuidedQuoteForm() {
               </fieldset>
             ) : null}
 
-            <div className="grid gap-5 border-t border-parchment pt-5 sm:grid-cols-2">
+            <div className="border-t border-parchment pt-5">
               <TextField
                 label="Accessibility requirements"
                 required={false}
                 {...register("accessibilityNeeds")}
                 error={errors.accessibilityNeeds?.message}
               />
-              <TextField
-                label="Dietary requirements"
-                required={false}
-                {...register("dietaryNeeds")}
-                error={errors.dietaryNeeds?.message}
-              />
             </div>
           </>
         ) : null}
 
-        {/* ---------------------------------------------------------- step 6 */}
+        {/* ---------------------------------------------------------- contact */}
         {step.id === "contact" ? (
           <>
             <TextField
@@ -697,6 +678,7 @@ export function GuidedQuoteForm() {
                 label="Email address"
                 type="email"
                 autoComplete="email"
+                required={false}
                 {...register("email")}
                 error={errors.email?.message}
               />
@@ -721,12 +703,8 @@ export function GuidedQuoteForm() {
               {...register("consent")}
               error={errors.consent?.message}
             />
+            <ReviewSummary values={getValues()} onEdit={goToStep} />
           </>
-        ) : null}
-
-        {/* ---------------------------------------------------------- step 7 */}
-        {step.id === "review" ? (
-          <ReviewSummary values={getValues()} onEdit={goToStep} />
         ) : null}
       </div>
 
@@ -743,13 +721,13 @@ export function GuidedQuoteForm() {
             <ChevronLeft aria-hidden className="size-4" /> Back
           </Button>
         ) : null}
-        {step.id !== "review" ? (
+        {step.id !== "contact" ? (
           <Button onClick={next} size="lg">
             {stepIndex === 0 ? "Start my enquiry" : "Continue"}
           </Button>
         ) : (
           <Button type="submit" size="lg" disabled={submitState.status === "submitting"}>
-            {submitState.status === "submitting" ? "Sending…" : "Send enquiry for review"}
+            {submitState.status === "submitting" ? "Sending..." : "Send enquiry"}
           </Button>
         )}
         <p className="w-full text-xs text-stone sm:ml-auto sm:w-auto">
@@ -774,34 +752,36 @@ function ReviewSummary({
     {
       label: "Destination",
       value: values.destination + (values.flexibleDestination ? " (flexible)" : ""),
-      step: 1,
+      step: 0,
     },
     ...(values.departureCity
-      ? [{ label: "From", value: values.departureCity, step: 1 }]
+      ? [{ label: "From", value: values.departureCity, step: 0 }]
       : []),
     {
       label: "Dates",
       value: values.flexibleDates
         ? `Flexible${values.departureDate ? ` — around ${values.departureDate}` : ""}`
         : `${values.departureDate}${values.returnDate ? ` → ${values.returnDate}` : ""}`,
-      step: 2,
+      step: 0,
     },
     {
       label: "Travellers",
       value: `${values.adults} adult(s)${values.children ? `, ${values.children} child(ren)` : ""}${
-        values.infants ? `, ${values.infants} infant(s)` : ""
-      } · ${TRAVELLER_TYPE_LABELS[values.travellerType]}`,
-      step: 3,
+        values.childAges ? ` · ages ${values.childAges}` : ""
+      }`,
+      step: 1,
     },
     {
-      label: "Style & budget",
-      value: `${STYLE_LABELS[values.style]} · ${BUDGET_LABELS[values.budget]}`,
-      step: 4,
+      label: "Budget",
+      value: BUDGET_LABELS[values.budget],
+      step: 1,
     },
     {
       label: "Contact",
-      value: `${values.fullName} · ${values.email} · ${values.whatsapp} (prefers ${values.preferredContact})`,
-      step: 5,
+      value: `${values.fullName} · ${values.whatsapp}${
+        values.email ? ` · ${values.email}` : ""
+      } (prefers ${values.preferredContact})`,
+      step: 2,
     },
   ];
 

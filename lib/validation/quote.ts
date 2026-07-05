@@ -71,17 +71,20 @@ export const quoteSchema = z
     // Step 4 — who
     adults: z.coerce.number().int().min(1, "At least one adult traveller").max(99),
     children: z.coerce.number().int().min(0).max(99),
+    childAges: optionalTrimmed,
     infants: z.coerce.number().int().min(0).max(20),
     travellerType: z.enum(travellerTypes),
 
-    // Step 5 — style, budget & service details
+    // Stage 2 — preferences & service details
     style: z.enum(travelStyles),
     budget: z.enum(budgetBands),
+    residency: z.enum(["resident", "non-resident", "not-sure"]).optional(),
 
     tripType: z.enum(["one-way", "return", "multi-city"]).optional(),
     cabinClass: z
       .enum(["economy", "premium-economy", "business", "first", "any"])
       .optional(),
+    checkedBaggage: z.enum(["yes", "no", "not-sure"]).optional(),
     preferredAirline: optionalTrimmed,
     baggageNotes: optionalTrimmed,
 
@@ -114,7 +117,7 @@ export const quoteSchema = z
     accessibilityNeeds: optionalTrimmed,
     dietaryNeeds: optionalTrimmed,
 
-    // Step 6 — contact
+    // Stage 3 — contact
     fullName: z.string().trim().min(2, "Enter your full name").max(120),
     whatsapp: z
       .string()
@@ -122,7 +125,12 @@ export const quoteSchema = z
       .min(7, "Enter the number we can reach you on")
       .max(20)
       .regex(/^\+?[0-9\s-]+$/, "Digits, spaces and + only"),
-    email: z.string().trim().email("Enter a valid email address"),
+    email: z
+      .string()
+      .trim()
+      .email("Enter a valid email address")
+      .optional()
+      .or(z.literal("")),
     preferredContact: z.enum(["whatsapp", "phone", "email"]),
     notes: optionalTrimmed,
     consent: z
@@ -164,11 +172,25 @@ export const quoteSchema = z
         message: "Each infant needs an accompanying adult",
       });
     }
+    if (data.children > 0 && !data.childAges) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["childAges"],
+        message: "Add the children's ages so we can quote correctly",
+      });
+    }
     if (data.service === "flights" && !data.departureCity) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["departureCity"],
         message: "Tell us which city you are flying from",
+      });
+    }
+    if (data.preferredContact === "email" && !data.email) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["email"],
+        message: "Add an email address if you prefer email contact",
       });
     }
     if ((data.service === "corporate" || data.service === "group") && !data.groupSize) {
@@ -192,10 +214,13 @@ export const quoteDefaults: QuoteFormValues = {
   flexibleDates: false,
   adults: 2,
   children: 0,
+  childAges: "",
   infants: 0,
   travellerType: "couple",
   style: "not-sure",
   budget: "not-sure",
+  residency: "not-sure",
+  checkedBaggage: "not-sure",
   preferredAirline: "",
   baggageNotes: "",
   roomConfiguration: "",
@@ -219,35 +244,34 @@ export const quoteDefaults: QuoteFormValues = {
 };
 
 export type QuoteStepId =
-  | "service"
-  | "destination"
-  | "dates"
-  | "travellers"
-  | "details"
-  | "contact"
-  | "review";
+  | "trip"
+  | "preferences"
+  | "contact";
 
 export const QUOTE_STEPS: { id: QuoteStepId; title: string; short: string }[] = [
-  { id: "service", title: "What would you like help with?", short: "Service" },
-  { id: "destination", title: "Where are you travelling?", short: "Where" },
-  { id: "dates", title: "When do you want to travel?", short: "When" },
-  { id: "travellers", title: "Who is travelling?", short: "Who" },
-  { id: "details", title: "Style, budget and details", short: "Details" },
-  { id: "contact", title: "How do we reach you?", short: "Contact" },
-  { id: "review", title: "Review and send", short: "Review" },
+  { id: "trip", title: "Trip", short: "Trip" },
+  { id: "preferences", title: "Travellers and preferences", short: "Preferences" },
+  { id: "contact", title: "Contact and review", short: "Contact" },
 ];
 
 /** Fields each step must pass before the form advances. */
 export const QUOTE_STEP_FIELDS: Record<QuoteStepId, (keyof QuoteFormValues)[]> = {
-  service: ["service"],
-  destination: ["destination", "departureCity", "flexibleDestination"],
-  dates: ["departureDate", "returnDate", "flexibleDates"],
-  travellers: ["adults", "children", "infants", "travellerType"],
-  details: [
-    "style",
+  trip: [
+    "service",
+    "destination",
+    "departureCity",
+    "departureDate",
+    "returnDate",
+    "flexibleDates",
+  ],
+  preferences: [
+    "adults",
+    "children",
+    "childAges",
     "budget",
     "tripType",
     "cabinClass",
+    "checkedBaggage",
     "rooms",
     "hotelCategory",
     "mealPlan",
@@ -257,7 +281,6 @@ export const QUOTE_STEP_FIELDS: Record<QuoteStepId, (keyof QuoteFormValues)[]> =
     "travelPurpose",
   ],
   contact: ["fullName", "whatsapp", "email", "preferredContact", "consent"],
-  review: [],
 };
 
 /** Human labels for the review step and WhatsApp summaries. */

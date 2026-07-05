@@ -250,7 +250,7 @@ export type EnquiryStatus =
 
 export type Customer = {
   fullName: string;
-  email: string;
+  email?: string;
   whatsapp: string;
   preferredContact: ContactMethod;
 };

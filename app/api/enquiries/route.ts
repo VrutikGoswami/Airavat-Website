@@ -50,7 +50,7 @@ export async function POST(request: Request) {
     notes: v.notes || undefined,
     customer: {
       fullName: v.fullName,
-      email: v.email,
+      email: v.email || undefined,
       whatsapp: v.whatsapp,
       preferredContact: v.preferredContact,
     },
