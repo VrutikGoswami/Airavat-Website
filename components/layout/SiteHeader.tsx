@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { primaryNav } from "@/config/navigation";
 import { getActiveCampaign } from "@/config/campaigns";
@@ -11,21 +11,38 @@ import { WhatsAppButton } from "@/components/ui/WhatsAppButton";
 import { ButtonLink } from "@/components/ui/Button";
 
 /**
- * Fixed header that overlays page heroes while at the top of the page and
- * transitions to a solid ivory bar once scrolled. Every page opens with a
- * dark hero band, so the transparent state always has enough contrast.
+ * Fixed header that stays available near the top, then clears the page while
+ * scrolling down and returns when the visitor scrolls back up.
  */
 export function SiteHeader() {
   const [scrolled, setScrolled] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const lastScrollY = useRef(0);
   const pathname = usePathname();
   const campaign = getActiveCampaign();
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 12);
+    const onScroll = () => {
+      const currentY = window.scrollY;
+
+      setScrolled(currentY > 12);
+      setHidden(currentY > 24 && currentY > lastScrollY.current + 4);
+      if (currentY < lastScrollY.current - 4 || currentY <= 12) {
+        setHidden(false);
+      }
+
+      lastScrollY.current = currentY;
+    };
+
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  useEffect(() => {
+    setHidden(false);
+    lastScrollY.current = window.scrollY;
+  }, [pathname]);
 
   const solid = scrolled;
   const textCls = "text-ink";
@@ -33,7 +50,9 @@ export function SiteHeader() {
 
   return (
     <header
-      className={`fixed inset-x-0 top-0 z-50 border-b backdrop-blur transition-colors duration-300 ${
+      className={`fixed inset-x-0 top-0 z-50 border-b backdrop-blur transition-[background-color,border-color,box-shadow,transform] duration-300 ${
+        hidden ? "-translate-y-full" : "translate-y-0"
+      } ${
         solid
           ? "border-clay/20 bg-[#f6b36f]/80 shadow-sm"
           : "border-clay/15 bg-[#f6b36f]/62"
