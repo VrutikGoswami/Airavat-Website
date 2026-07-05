@@ -49,6 +49,21 @@ function readDraft(): { values: Partial<QuoteFormValues>; step: number } | null 
   }
 }
 
+function sourceContext(searchParams: URLSearchParams) {
+  const utm = Object.fromEntries(
+    Array.from(searchParams.entries()).filter(([key]) => key.startsWith("utm_")),
+  );
+
+  return {
+    landingPage: typeof window !== "undefined" ? window.location.pathname : undefined,
+    referrer: typeof document !== "undefined" ? document.referrer || undefined : undefined,
+    utm: Object.keys(utm).length ? utm : undefined,
+    selectedDestination: searchParams.get("destination") ?? undefined,
+    selectedItinerary: searchParams.get("itinerary") ?? undefined,
+    selectedOffer: searchParams.get("offer") ?? undefined,
+  };
+}
+
 /**
  * Guided, multi-stage enquiry flow. Consultative by design: every stage
  * allows "not sure", progress is saved locally, and submission clearly
@@ -164,7 +179,7 @@ export function GuidedQuoteForm() {
         const res = await fetch("/api/enquiries", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(values),
+          body: JSON.stringify({ ...values, sourceContext: sourceContext(searchParams) }),
         });
         if (!res.ok) {
           const body = (await res.json().catch(() => null)) as { error?: string } | null;

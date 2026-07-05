@@ -2,7 +2,10 @@ import { NextResponse } from "next/server";
 import { quoteSchema } from "@/lib/validation/quote";
 import { enquiryStore } from "@/lib/integrations";
 import { generateEnquiryReference } from "@/lib/enquiry-reference";
-import type { TravelEnquiry } from "@/types";
+import {
+  buildDemoEnquiry,
+  saveToSupabaseCrm,
+} from "@/lib/server/enquiry-intake";
 
 /**
  * Demonstration enquiry intake. Validates the submission, assigns a
@@ -32,94 +35,18 @@ export async function POST(request: Request) {
     );
   }
 
+  const raw = payload && typeof payload === "object" ? payload as Record<string, unknown> : {};
+  const sourceContext =
+    raw.sourceContext && typeof raw.sourceContext === "object"
+      ? raw.sourceContext as Record<string, unknown>
+      : {};
   const v = parsed.data;
   const reference = generateEnquiryReference();
 
-  const enquiry: TravelEnquiry = {
-    reference,
-    service: v.service,
-    destination: v.destination,
-    flexibleDestination: v.flexibleDestination,
-    departureDate: v.departureDate || undefined,
-    returnDate: v.returnDate || undefined,
-    flexibleDates: v.flexibleDates,
-    travellers: { adults: v.adults, children: v.children, infants: v.infants },
-    travellerType: v.travellerType,
-    style: v.style,
-    budget: v.budget,
-    notes: v.notes || undefined,
-    customer: {
-      fullName: v.fullName,
-      email: v.email || undefined,
-      whatsapp: v.whatsapp,
-      preferredContact: v.preferredContact,
-    },
-    consent: v.consent,
-    flight:
-      v.service === "flights"
-        ? {
-            tripType: v.tripType ?? "return",
-            departureCity: v.departureCity ?? "",
-            destinationCity: v.destination,
-            cabinClass: v.cabinClass ?? "any",
-            preferredAirline: v.preferredAirline || undefined,
-            baggageNotes: v.baggageNotes || undefined,
-          }
-        : undefined,
-    hotel:
-      v.service === "hotels"
-        ? {
-            destination: v.destination,
-            rooms: v.rooms ?? 1,
-            roomConfiguration: v.roomConfiguration || undefined,
-            hotelCategory: v.hotelCategory ?? "any",
-            mealPlan: v.mealPlan ?? "any",
-            preferredArea: v.preferredArea || undefined,
-          }
-        : undefined,
-    safari:
-      v.service === "safari" || v.service === "holiday-package" || v.service === "transport"
-        ? {
-            origin: v.departureCity || "",
-            accessPreference: v.accessPreference ?? "either",
-            accommodationStyle: v.accommodationStyle ?? "not-sure",
-            includeFlights: v.includeFlights ?? false,
-            includeAccommodation: v.includeAccommodation ?? false,
-            includeTransfers: v.includeTransfers ?? false,
-            includeDailyTransport: v.includeDailyTransport ?? false,
-            activities: v.activities || undefined,
-            specialOccasion: v.specialOccasion || undefined,
-          }
-        : undefined,
-    group:
-      v.service === "group"
-        ? {
-            organisationName: v.organisationName || undefined,
-            groupSize: v.groupSize ?? "",
-            travelPurpose: v.travelPurpose || "",
-            departurePoints: v.departurePoints || undefined,
-            coordinationNotes: v.coordinationNotes || undefined,
-          }
-        : undefined,
-    corporate:
-      v.service === "corporate"
-        ? {
-            organisationName: v.organisationName || undefined,
-            groupSize: v.groupSize ?? "",
-            travelPurpose: v.travelPurpose || "",
-            departurePoints: v.departurePoints || undefined,
-            coordinationNotes: v.coordinationNotes || undefined,
-            billingRequirements: v.billingRequirements || undefined,
-          }
-        : undefined,
-    accessibilityNeeds: v.accessibilityNeeds || undefined,
-    dietaryNeeds: v.dietaryNeeds || undefined,
-    source: "website-quote-form",
-    submittedAt: new Date().toISOString(),
-    status: "new",
-  };
-
-  await enquiryStore.save(enquiry);
+  const crmResult = await saveToSupabaseCrm(reference, v, sourceContext);
+  if (!crmResult) {
+    await enquiryStore.save(buildDemoEnquiry(reference, v));
+  }
 
   return NextResponse.json({ reference }, { status: 201 });
 }
