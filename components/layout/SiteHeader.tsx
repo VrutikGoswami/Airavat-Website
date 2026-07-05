@@ -28,17 +28,19 @@ export function SiteHeader() {
   }, []);
 
   const solid = scrolled;
-  const textCls = solid ? "text-ink" : "text-cream";
-  const linkHover = solid ? "hover:text-clay" : "hover:text-gold";
+  const textCls = "text-ink";
+  const linkHover = "hover:text-clay";
 
   return (
     <header
-      className={`fixed inset-x-0 top-0 z-50 transition-colors duration-300 ${
-        solid ? "bg-ivory/95 backdrop-blur border-b border-parchment" : "bg-transparent"
+      className={`fixed inset-x-0 top-0 z-50 border-b backdrop-blur transition-colors duration-300 ${
+        solid
+          ? "border-clay/20 bg-[#f6b36f]/80 shadow-sm"
+          : "border-clay/15 bg-[#f6b36f]/62"
       }`}
     >
       <div className="container-site flex h-16 items-center justify-between gap-4 lg:h-20">
-        <BrandLogo tone={solid ? "dark" : "light"} />
+        <BrandLogo tone="dark" />
 
         <nav aria-label="Primary" className="hidden lg:block">
           <ul className="flex items-center gap-7">
@@ -74,15 +76,16 @@ export function SiteHeader() {
         <div className="hidden items-center gap-3 lg:flex">
           <WhatsAppButton
             trackingSource="header"
-            variant={solid ? "outline" : "light"}
+            variant="outline"
             label="WhatsApp"
+            className="border-[#25D366]/70 bg-[#25D366]/15 text-[#075E54] hover:border-[#25D366] hover:bg-[#25D366] hover:text-ink"
           />
-          <ButtonLink href="/request-a-quote" variant="primary">
+          <ButtonLink href="/request-a-quote" variant="dark">
             Request a Quote
           </ButtonLink>
         </div>
 
-        <MobileNavigation solidHeader={solid} />
+        <MobileNavigation solidHeader />
       </div>
     </header>
   );
