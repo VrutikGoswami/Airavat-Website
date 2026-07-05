@@ -1,6 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronDown } from "lucide-react";
 import type { Metadata } from "next";
 import { getActiveCampaign } from "@/config/campaigns";
 import { destinations } from "@/data/destinations";
@@ -16,11 +15,9 @@ import { EditorialCTA } from "@/components/editorial/EditorialCTA";
 import { FAQAccordion } from "@/components/editorial/FAQAccordion";
 import { ProcessTimeline } from "@/components/editorial/ProcessTimeline";
 import { ServiceIndex } from "@/components/editorial/ServiceIndex";
-import { TestimonialSection } from "@/components/editorial/TestimonialSection";
 import { TrustStatement } from "@/components/editorial/TrustStatement";
 import { DestinationExplorer } from "@/components/destination/DestinationExplorer";
 import { ItineraryCard } from "@/components/destination/ItineraryCard";
-import { PlanningStarter } from "@/components/forms/PlanningStarter";
 import { LazyKenyaMapPreview } from "@/components/map/LazyMaps";
 
 export const metadata: Metadata = {
@@ -65,7 +62,7 @@ export default function HomePage() {
         <div className="container-site relative pb-24 pt-40 sm:pb-28">
           <div className="max-w-3xl">
             {campaign ? (
-              <p className="eyebrow rise-in text-gold">
+              <p className="eyebrow rise-in inline-flex bg-[#f6b36f]/75 px-3 py-2 text-ink backdrop-blur">
                 {campaign.label} · Maasai Mara
               </p>
             ) : (
@@ -77,6 +74,9 @@ export default function HomePage() {
             <p className="rise-in-late mt-6 max-w-2xl text-base leading-relaxed text-cream/90 sm:text-lg">
               Custom safari arrangements, flights, hotels, transport and complete travel
               coordination — from one local team that answers when you call.
+            </p>
+            <p className="display-serif rise-in-late mt-6 max-w-2xl text-3xl leading-tight text-cream sm:text-5xl">
+              Best prices, easiest process.
             </p>
             <div className="rise-in-late mt-8 flex flex-wrap gap-3">
               <ButtonLink
@@ -99,44 +99,6 @@ export default function HomePage() {
             ) : null}
           </div>
         </div>
-
-        <a
-          href="#start-planning"
-          className="absolute bottom-5 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-1 text-cream/80 hover:text-gold sm:flex"
-          aria-label="Scroll to start planning"
-        >
-          <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Scroll</span>
-          <ChevronDown aria-hidden className="size-5 animate-bounce motion-reduce:animate-none" />
-        </a>
-      </section>
-
-      {/* ---------------------------------------------- planning entry point */}
-      <section id="start-planning" className="relative">
-        <div className="container-site">
-          <div className="relative z-10 -mt-16 max-w-3xl sm:-mt-20 lg:mx-0">
-            <PlanningStarter />
-          </div>
-        </div>
-      </section>
-
-      {/* -------------------------------------------------- what we do intro */}
-      <section className="container-site grid gap-10 py-16 sm:py-20 lg:grid-cols-[1fr_1fr] lg:gap-20">
-        <SectionHeading
-          eyebrow="What we do"
-          title="A travel desk, not a search engine"
-          lede="We arrange flights, hotels, safaris, airport transfers and complete holidays — for individuals, families, companies and groups, within Kenya and internationally."
-        />
-        <div className="max-w-xl self-end text-base leading-relaxed text-ink-soft space-y-4">
-          <p>
-            Tell us what you need in plain language. A consultant checks current fares and
-            availability through our airline and supplier systems, then sends you options to
-            choose from — with the trade-offs explained honestly.
-          </p>
-          <p className="font-semibold text-ink">
-            Nothing on this website sells you a ticket automatically. That is deliberate: for
-            high-value travel, a person who is accountable to you beats a checkout button.
-          </p>
-        </div>
       </section>
 
       {/* --------------------------------------------- seasonal Mara feature */}
@@ -153,7 +115,9 @@ export default function HomePage() {
               />
             </div>
             <div className="order-1 lg:order-2 lg:py-6">
-              <p className="eyebrow text-gold">{campaign.label}</p>
+              <p className="eyebrow inline-flex bg-[#f6b36f]/75 px-3 py-2 text-ink backdrop-blur">
+                {campaign.label} · Maasai Mara
+              </p>
               <h2 className="display-serif mt-3 text-3xl sm:text-4xl lg:text-5xl text-balance">
                 {campaign.headline}
               </h2>
@@ -200,6 +164,18 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ------------------------------------------------------- discovery */}
+      <section className="container-site py-16 sm:py-20 lg:py-24">
+        <SectionHeading
+          eyebrow="Destination discovery"
+          title="Browse by who you are and when you can travel"
+          lede="Filter our starting list by traveller type, experience or month. If your destination isn't listed yet, the enquiry form covers anywhere we can reach."
+        />
+        <div className="mt-10">
+          <DestinationExplorer destinations={destinations} experiences={experiences} />
+        </div>
+      </section>
+
       {/* -------------------------------------------------------- services */}
       <section id="services" className="bg-sand/60">
         <div className="container-site py-16 sm:py-20 lg:py-24">
@@ -211,18 +187,6 @@ export default function HomePage() {
           <div className="mt-12">
             <ServiceIndex services={services} />
           </div>
-        </div>
-      </section>
-
-      {/* ------------------------------------------------------- discovery */}
-      <section className="container-site py-16 sm:py-20 lg:py-24">
-        <SectionHeading
-          eyebrow="Destination discovery"
-          title="Browse by who you are and when you can travel"
-          lede="Filter our starting list by traveller type, experience or month. If your destination isn't listed yet, the enquiry form covers anywhere we can reach."
-        />
-        <div className="mt-10">
-          <DestinationExplorer destinations={destinations} experiences={experiences} />
         </div>
       </section>
 
@@ -275,20 +239,6 @@ export default function HomePage() {
           />
           <div className="mt-12">
             <TrustStatement />
-          </div>
-        </div>
-      </section>
-
-      {/* ---------------------------------------------------- testimonials */}
-      <section className="bg-sand/60">
-        <div className="container-site py-16 sm:py-20">
-          <SectionHeading
-            eyebrow="What travellers say"
-            title="Feedback belongs here — real feedback"
-            lede="These are sample entries demonstrating the layout. They will be replaced with permission-cleared customer feedback before launch."
-          />
-          <div className="mt-10">
-            <TestimonialSection />
           </div>
         </div>
       </section>
