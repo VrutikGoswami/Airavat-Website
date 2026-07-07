@@ -4,6 +4,7 @@ import { PageHero } from "@/components/editorial/PageHero";
 import { ButtonLink } from "@/components/ui/Button";
 import { ContactLink } from "@/components/ui/ContactLink";
 import { WhatsAppButton } from "@/components/ui/WhatsAppButton";
+import { ResponseTimeNote } from "@/components/editorial/ResponseTimeNote";
 import { companyConfig } from "@/config/company";
 
 export const metadata: Metadata = {
@@ -32,6 +33,7 @@ export default function ContactPage() {
             end to end today; remaining placeholder business details will be replaced before
             launch.
           </p>
+          <ResponseTimeNote className="mt-4 max-w-lg" />
           <dl className="mt-8 space-y-6">
             <div id="whatsapp" className="flex gap-4 scroll-mt-28">
               <MessageCircle aria-hidden className="mt-1 size-5 shrink-0 text-ochre" />
@@ -128,9 +130,6 @@ export default function ContactPage() {
           <ButtonLink href="/request-a-quote" size="lg" className="mt-8">
             Request a travel quote
           </ButtonLink>
-          <p className="mt-4 text-xs text-stone">
-            Submitting the form creates an enquiry for review — never a booking or a charge.
-          </p>
         </div>
       </section>
     </>

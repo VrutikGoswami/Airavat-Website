@@ -110,7 +110,7 @@ export const destinations: Destination[] = [
       { month: "dec", rating: "good", note: "Festive season; green and lively" },
     ],
     mapPointIds: maraPointIds,
-    faqIds: ["mara-when", "wildlife-guarantee", "children-safari", "booking-confirmed"],
+    faqIds: ["mara-when", "children-safari"],
     featured: true,
     published: true,
     travellerTypes: ["solo", "couple", "family", "friends", "group"],

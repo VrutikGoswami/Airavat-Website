@@ -20,6 +20,8 @@ export const companyConfig = {
   address: "602, NML Towers, Tsavo Road, South B, Nairobi, Kenya, 18815-00500",
   city: "Nairobi, Kenya",
   openingHours: "6 AM to 8 PM",
+  /** Placeholder — confirm the real target reply time before launch. */
+  responseTime: "[a few hours]",
   currency: "KES",
   socialLinks: {
     instagram: "https://www.instagram.com/airavatltd/",

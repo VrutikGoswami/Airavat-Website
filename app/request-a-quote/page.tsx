@@ -3,6 +3,8 @@ import { Suspense } from "react";
 import { PageHero } from "@/components/editorial/PageHero";
 import { GuidedQuoteForm } from "@/components/forms/GuidedQuoteForm";
 import { WhatsAppButton } from "@/components/ui/WhatsAppButton";
+import { NoBookingNote } from "@/components/editorial/NoBookingNote";
+import { ResponseTimeNote } from "@/components/editorial/ResponseTimeNote";
 
 export const metadata: Metadata = {
   title: "Request a Travel Quote",
@@ -37,6 +39,7 @@ export default function RequestAQuotePage() {
               <li>We send current options.</li>
               <li>You approve before anything is booked.</li>
             </ol>
+            <ResponseTimeNote className="mt-5 border-t border-parchment pt-4" />
           </div>
           <div className="border border-parchment p-6">
             <h2 className="font-bold">Prefer to talk it through?</h2>
@@ -48,10 +51,7 @@ export default function RequestAQuotePage() {
               <WhatsAppButton trackingSource="quote-page-aside" variant="outline" />
             </div>
           </div>
-          <p className="text-xs leading-relaxed text-stone">
-            Your details are used only to respond to this enquiry. We don&rsquo;t ask for passport
-            or payment information at this stage — anyone who does, isn&rsquo;t us.
-          </p>
+          <NoBookingNote variant="card" />
         </aside>
       </section>
     </>

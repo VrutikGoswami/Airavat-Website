@@ -28,6 +28,7 @@ import {
   quoteDefaults,
   quoteSchema,
   travelStyles,
+  travellerTypes,
   type QuoteFormValues,
 } from "@/lib/validation/quote";
 import { destinations } from "@/data/destinations";
@@ -113,17 +114,40 @@ export function GuidedQuoteForm() {
     }
     const destinationParam = searchParams.get("destination");
     if (destinationParam) {
-      const known = destinations.find((d) => d.slug === destinationParam);
-      setValue("destination", known ? `${known.name}, ${known.country}` : destinationParam);
+      if (destinationParam === "international") {
+        setValue("destination", "Somewhere international");
+      } else {
+        const known = destinations.find((d) => d.slug === destinationParam);
+        setValue("destination", known ? `${known.name}, ${known.country}` : destinationParam);
+      }
     }
     const originParam = searchParams.get("origin");
     if (originParam) {
       setValue("departureCity", originParam);
     }
-    const offerParam = searchParams.get("offer");
-    if (offerParam) {
-      setValue("notes", `Offer enquiry: ${offerParam}`);
+    // Who is travelling — carried straight from the homepage planner, so it is
+    // never re-asked in the form.
+    const whoParam = searchParams.get("who");
+    if (whoParam && (travellerTypes as readonly string[]).includes(whoParam)) {
+      setValue("travellerType", whoParam as QuoteFormValues["travellerType"]);
     }
+    // Build notes from any offer / itinerary / free-text style context so none
+    // overwrites another. `style` may be a travel-style enum (set it) or a
+    // free-text accommodation preference from a destination page (note it).
+    const noteLines: string[] = [];
+    const offerParam = searchParams.get("offer");
+    if (offerParam) noteLines.push(`Offer enquiry: ${offerParam}`);
+    const itineraryParam = searchParams.get("itinerary");
+    if (itineraryParam) noteLines.push(`Itinerary idea: ${itineraryParam}`);
+    const styleParam = searchParams.get("style");
+    if (styleParam) {
+      if ((travelStyles as readonly string[]).includes(styleParam)) {
+        setValue("style", styleParam as QuoteFormValues["style"]);
+      } else {
+        noteLines.push(`Accommodation preference: ${styleParam}`);
+      }
+    }
+    if (noteLines.length) setValue("notes", noteLines.join(" · "));
     const whenParam = searchParams.get("when");
     if (whenParam && /^\d{4}-\d{2}-\d{2}$/.test(whenParam)) {
       setValue("departureDate", whenParam);

@@ -10,6 +10,7 @@ export const services: Service[] = [
     summary:
       "One-way, return or multi-city — we search current fares through our airline systems and send you options with the trade-offs explained, then handle ticketing and changes.",
     heroImage: "/images/service-flights.jpg",
+    arrangeIntro: "Everything from a single ticket to a complex multi-city routing.",
     requestables: [
       "Domestic and international tickets",
       "One-way, return and multi-city routings",
@@ -24,6 +25,24 @@ export const services: Service[] = [
       "Families and groups on one booking",
       "Business travellers with changing plans",
     ],
+    sendBasics: [
+      "Cabin class and any airline preference",
+      "Baggage needs (extra bags, sports equipment)",
+    ],
+    quotationGuide: {
+      covers: [
+        "Fare options across suitable airlines and routings",
+        "Baggage allowance and cabin class for each option",
+        "Total price per traveller with taxes included",
+        "Change and cancellation rules for the fare",
+        "Optional add-ons: seats, extra bags, insurance",
+      ],
+      indicative:
+        "Most quotations show two or three fares — the cheapest, the most convenient, and a flexible middle ground.",
+      leadTime:
+        "Enquire as early as you can for the best fares; short-notice and next-day tickets are possible too.",
+      excludes: ["Visa fees and processing", "Airport transfers and hotels, unless you ask us to add them"],
+    },
     editorial: [
       {
         title: "Why book flights through a consultant?",
@@ -34,7 +53,7 @@ export const services: Service[] = [
         body: "Send your route, dates and passenger details. A consultant replies with current options and holds a fare where the airline allows it. Ticketing happens only after you approve the quotation and pay — nothing is bought automatically.",
       },
     ],
-    faqIds: ["flight-changes", "visas", "flights-and-hotels-together", "booking-confirmed"],
+    faqIds: [],
     relatedServiceSlugs: ["hotels", "transport", "holiday-packages"],
     cta: {
       label: "Request flight options",
@@ -50,6 +69,7 @@ export const services: Service[] = [
     summary:
       "City hotels, beach resorts, safari lodges and apartments — shortlisted for your budget and reason for travel, and confirmed directly with the property.",
     heroImage: "/images/service-hotels.jpg",
+    arrangeIntro: "Rooms matched to the trip, the travellers and the budget.",
     requestables: [
       "Hotels in Kenya and internationally",
       "Family rooms and multi-room configurations",
@@ -64,6 +84,24 @@ export const services: Service[] = [
       "Families needing connecting or triple rooms",
       "Event and group organisers",
     ],
+    sendBasics: [
+      "Room configuration (e.g. 1 double + 1 twin)",
+      "Preferred board (room-only through all-inclusive)",
+    ],
+    quotationGuide: {
+      covers: [
+        "A short list of properties that fit your budget and area",
+        "Room type and configuration, with what the rate includes",
+        "Board basis, from room-only to all-inclusive",
+        "Total stay price with taxes and any resort fees noted",
+        "The cancellation policy for each option",
+      ],
+      indicative:
+        "Typical stays run from a 2–3 night city break to 7+ nights on the coast; we quote the exact nights you ask for.",
+      leadTime:
+        "Peak weeks (December–January, July–August) and school holidays fill early — a few weeks' notice helps.",
+      excludes: ["Flights and transfers, unless you ask us to include them"],
+    },
     editorial: [
       {
         title: "Shortlists over search results",
@@ -74,7 +112,7 @@ export const services: Service[] = [
         body: "Once you choose, we confirm the reservation with the property and send written confirmation. Room availability and rates are always checked at the time of quotation — we never present cached prices as live ones.",
       },
     ],
-    faqIds: ["hotel-categories", "flights-and-hotels-together", "booking-confirmed"],
+    faqIds: ["hotel-categories"],
     relatedServiceSlugs: ["flights", "transport", "holiday-packages"],
     cta: {
       label: "Request hotel options",
@@ -90,6 +128,7 @@ export const services: Service[] = [
     summary:
       "Private and small-group safaris across Kenya — the Mara first among them — with vehicles, guides, park logistics and accommodation coordinated as one plan.",
     heroImage: "/images/mara-plains.jpg",
+    arrangeIntro: "Every part of a safari coordinated as one plan.",
     requestables: [
       "Maasai Mara safaris, road or fly-in",
       "Multi-park Kenya itineraries",
@@ -104,6 +143,10 @@ export const services: Service[] = [
       "Photographers",
       "Groups of friends and celebration trips",
     ],
+    sendBasics: [
+      "Road or fly-in preference",
+      "Number of nights in the park",
+    ],
     editorial: [
       {
         title: "Honest expectations, better trips",
@@ -114,7 +157,7 @@ export const services: Service[] = [
         body: "Road safaris cost less and show you the Rift Valley on the way; fly-in safaris trade the drive for an extra game drive. Many trips mix both. We lay out the real numbers for your dates so you can choose with clear eyes.",
       },
     ],
-    faqIds: ["wildlife-guarantee", "mara-when", "children-safari", "transport-from-nairobi"],
+    faqIds: ["wildlife-guarantee"],
     relatedServiceSlugs: ["holiday-packages", "transport", "flights"],
     cta: {
       label: "Plan a safari",
@@ -130,6 +173,7 @@ export const services: Service[] = [
     summary:
       "Airport pickups, hotel transfers, chauffeured days and multi-day overland transport — arranged with vetted drivers and confirmed timings.",
     heroImage: "/images/service-transport.jpg",
+    arrangeIntro: "Vehicles, drivers and timings you can rely on.",
     requestables: [
       "Airport transfers in Nairobi and Mombasa",
       "Hotel-to-hotel transfers",
@@ -144,6 +188,10 @@ export const services: Service[] = [
       "Safari clients travelling by road",
       "Event and conference organisers",
     ],
+    sendBasics: [
+      "Pickup and drop-off points",
+      "Passenger and luggage numbers (for the right vehicle)",
+    ],
     editorial: [
       {
         title: "Small detail, big difference",
@@ -154,7 +202,7 @@ export const services: Service[] = [
         body: "We work with licensed, insured drivers and operators we know. Vehicle assignments are confirmed per booking, and every quotation states exactly what vehicle class and mileage is included.",
       },
     ],
-    faqIds: ["transport-from-nairobi", "booking-confirmed"],
+    faqIds: ["transport-from-nairobi"],
     relatedServiceSlugs: ["flights", "hotels", "tours-and-safaris"],
     cta: {
       label: "Arrange transport",
@@ -170,6 +218,7 @@ export const services: Service[] = [
     summary:
       "Flights, stays, transfers and activities planned together, priced together and managed by one consultant from first idea to your return home.",
     heroImage: "/images/itinerary-coast.jpg",
+    arrangeIntro: "Flights, stays, transfers and activities in one coordinated plan.",
     requestables: [
       "Complete Kenya holidays",
       "Safari and coast combinations",
@@ -184,6 +233,24 @@ export const services: Service[] = [
       "Friends travelling together",
       "Kenyan residents holidaying abroad",
     ],
+    sendBasics: [
+      "The occasion (honeymoon, family break, celebration)",
+      "Which elements to include: flights, stays, transfers, activities",
+    ],
+    quotationGuide: {
+      covers: [
+        "A day-by-day outline of the whole trip",
+        "Flights, stays, transfers and activities as one price",
+        "What is included and what is not, clearly listed",
+        "Deposit and balance schedule (paid to us on approval, never on this site)",
+        "Room and cabin choices where they change the price",
+      ],
+      indicative:
+        "Common shapes: 5–7 nights safari-and-coast in Kenya, or 4–7 nights for Dubai and island holidays. Durations flex to your dates.",
+      leadTime:
+        "Four to eight weeks' notice gives the widest choice; festive and long-holiday travel benefits from more.",
+      excludes: ["Visas, travel insurance and personal spending, unless noted"],
+    },
     editorial: [
       {
         title: "Why package with us?",
@@ -194,7 +261,7 @@ export const services: Service[] = [
         body: "There is no fixed catalogue. Tell us the occasion, dates, budget band and travel style; we assemble a plan, you refine it, and nothing is confirmed until you approve the final quotation.",
       },
     ],
-    faqIds: ["flights-and-hotels-together", "quotation-process", "payment-methods"],
+    faqIds: [],
     relatedServiceSlugs: ["tours-and-safaris", "flights", "hotels"],
     cta: {
       label: "Build a complete holiday",
@@ -210,6 +277,7 @@ export const services: Service[] = [
     summary:
       "Flights, hotels near the work, airport transfers and fast changes — handled by a consultant who learns how your organisation travels.",
     heroImage: "/images/service-corporate.jpg",
+    arrangeIntro: "A dependable desk shaped around how your organisation travels.",
     requestables: [
       "Business flights, including short-notice tickets",
       "Hotels near offices, sites and venues",
@@ -224,6 +292,10 @@ export const services: Service[] = [
       "Executive assistants and office managers",
       "Regional teams travelling into or out of Kenya",
     ],
+    sendBasics: [
+      "Billing/invoicing needs and who approves travel",
+      "Typical routes and any travel policy",
+    ],
     editorial: [
       {
         title: "Built for how organisations actually travel",
@@ -234,7 +306,7 @@ export const services: Service[] = [
         body: "No contracts or minimums to begin. Send your next trip's details, see how we handle it, and we will discuss ongoing arrangements — billing preferences included — once we have earned the next one.",
       },
     ],
-    faqIds: ["corporate-billing", "flight-changes", "booking-confirmed"],
+    faqIds: ["corporate-billing"],
     relatedServiceSlugs: ["flights", "hotels", "transport"],
     cta: {
       label: "Discuss corporate travel",
@@ -250,6 +322,7 @@ export const services: Service[] = [
     summary:
       "Schools, companies, faith groups and celebrations — seat blocks, room blocks, coach transport and a coordinator who keeps every name on the right list.",
     heroImage: "/images/service-group.jpg",
+    arrangeIntro: "The logistics that keep a whole group moving together.",
     requestables: [
       "School and university trips",
       "Company retreats and incentive travel",
@@ -264,6 +337,10 @@ export const services: Service[] = [
       "Faith and community group leaders",
       "Family organisers of large gatherings",
     ],
+    sendBasics: [
+      "Rough group size and your lead time",
+      "Rooming preferences and any dietary needs",
+    ],
     editorial: [
       {
         title: "Groups are a different craft",
@@ -274,7 +351,7 @@ export const services: Service[] = [
         body: "Airlines and hotels confirm groups person by person, so the earlier we start, the better the terms. Come to us with rough numbers and dates; we will tell you honestly what is achievable and what deadlines the suppliers will set.",
       },
     ],
-    faqIds: ["group-travel", "payment-methods", "booking-confirmed"],
+    faqIds: ["group-travel"],
     relatedServiceSlugs: ["corporate-travel", "transport", "tours-and-safaris"],
     cta: {
       label: "Ask about group arrangements",

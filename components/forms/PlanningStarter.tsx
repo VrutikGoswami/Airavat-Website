@@ -125,9 +125,6 @@ export function PlanningStarter() {
       >
         Continue planning <ArrowRight aria-hidden className="size-4" />
       </button>
-      <p className="mt-3 text-center text-xs text-stone">
-        No booking is made — this builds an enquiry for a human consultant.
-      </p>
     </form>
   );
 }

@@ -10,6 +10,7 @@ import { WhatsAppButton } from "@/components/ui/WhatsAppButton";
 import { PlanningStarter } from "@/components/forms/PlanningStarter";
 import { CurrentOffers } from "@/components/editorial/CurrentOffers";
 import { EditorialCTA } from "@/components/editorial/EditorialCTA";
+import { NoBookingNote } from "@/components/editorial/NoBookingNote";
 import { ProcessTimeline } from "@/components/editorial/ProcessTimeline";
 import { TrustStatement } from "@/components/editorial/TrustStatement";
 
@@ -81,19 +82,20 @@ export default function HomePage() {
             </h2>
             <p className="mt-4 max-w-2xl text-sm leading-relaxed text-ink-soft sm:text-base">
               Service, destination, dates, travellers, budget and contact details are enough to
-              start. No passport, payment or booking documents are requested here.
+              start.
             </p>
+            <NoBookingNote className="mt-4 max-w-2xl" />
           </div>
           <PlanningStarter />
         </div>
       </section>
 
-      {/* --------------------------------------------- popular right now */}
+      {/* ------------------------------------------------------- start here */}
       <section className="container-site py-16 sm:py-20">
         <SectionHeading
-          eyebrow="Popular right now"
-          title="Fast routes into the right enquiry"
-          lede="No live fares are shown here. A consultant checks current airline, hotel, camp and transfer options for your dates."
+          eyebrow="Start here"
+          title="Pick a starting point, we'll shape the rest"
+          lede="Each opens a short enquiry — a consultant then checks current airline, hotel, camp and transfer options for your dates."
         />
         <div className="mt-10 grid gap-5 lg:grid-cols-3">
           {popularRoutes.map((route) => (
@@ -109,10 +111,7 @@ export default function HomePage() {
                 ))}
               </ul>
               <div className="mt-6 flex flex-wrap gap-3">
-                <ButtonLink
-                  href={enquiryHref(route.enquiry)}
-                  className="w-full sm:w-auto"
-                >
+                <ButtonLink href={enquiryHref(route.enquiry)} className="w-full sm:w-auto">
                   {route.primaryAction}
                 </ButtonLink>
                 <WhatsAppButton
@@ -126,17 +125,10 @@ export default function HomePage() {
             </article>
           ))}
         </div>
-      </section>
 
-      {/* --------------------------------------------- travel categories */}
-      <section className="bg-sand/50">
-        <div className="container-site py-14 sm:py-16">
-          <SectionHeading
-            eyebrow="Browse by need"
-            title="Simple travel categories"
-            lede="Choose a category and the shared enquiry flow opens with the closest context."
-          />
-          <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-10 border-t border-parchment pt-8">
+          <p className="eyebrow text-stone">Or browse by need</p>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {travelCategories.map((category) => (
               <Link
                 key={category.title}

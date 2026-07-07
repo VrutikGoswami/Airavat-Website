@@ -21,13 +21,23 @@ export type TravelCategory = {
   href: string;
 };
 
+export type DestinationExperience = "safari" | "beach" | "city";
+
 export type DestinationListing = {
   name: string;
   slug: string;
   region: "Kenya" | "International";
+  /** Drives the hub's experience filter chips. */
+  experience: DestinationExperience;
   summary: string;
   service: EnquiryService;
   published?: boolean;
+};
+
+export const DESTINATION_EXPERIENCE_LABELS: Record<DestinationExperience, string> = {
+  safari: "Safari",
+  beach: "Beach",
+  city: "City",
 };
 
 export const popularRoutes: PopularRoute[] = [
@@ -126,6 +136,7 @@ export const destinationListings: DestinationListing[] = [
     name: "Maasai Mara",
     slug: "maasai-mara",
     region: "Kenya",
+    experience: "safari",
     summary: "Flagship safari destination with a full guide, map and seasonal planning notes.",
     service: "safari",
     published: true,
@@ -134,6 +145,7 @@ export const destinationListings: DestinationListing[] = [
     name: "Amboseli",
     slug: "amboseli",
     region: "Kenya",
+    experience: "safari",
     summary: "Elephant-focused safaris, often paired with the Mara or a coast extension.",
     service: "safari",
   },
@@ -141,6 +153,7 @@ export const destinationListings: DestinationListing[] = [
     name: "Naivasha",
     slug: "naivasha",
     region: "Kenya",
+    experience: "safari",
     summary: "Rift Valley weekend escapes, boat trips and gentle family breaks.",
     service: "holiday-package",
   },
@@ -148,6 +161,7 @@ export const destinationListings: DestinationListing[] = [
     name: "Samburu",
     slug: "samburu",
     region: "Kenya",
+    experience: "safari",
     summary: "Northern Kenya safari enquiries with distinctive landscapes and wildlife.",
     service: "safari",
   },
@@ -155,6 +169,7 @@ export const destinationListings: DestinationListing[] = [
     name: "Diani",
     slug: "diani",
     region: "Kenya",
+    experience: "beach",
     summary: "South coast beach holidays, family stays and safari-and-coast combinations.",
     service: "holiday-package",
   },
@@ -162,6 +177,7 @@ export const destinationListings: DestinationListing[] = [
     name: "Mombasa",
     slug: "mombasa",
     region: "Kenya",
+    experience: "beach",
     summary: "North coast beach resorts, conferences and shorter domestic breaks.",
     service: "holiday-package",
   },
@@ -169,6 +185,7 @@ export const destinationListings: DestinationListing[] = [
     name: "Watamu",
     slug: "watamu",
     region: "Kenya",
+    experience: "beach",
     summary: "Coastal holidays with reef, beach and family-friendly stay requests.",
     service: "holiday-package",
   },
@@ -176,6 +193,7 @@ export const destinationListings: DestinationListing[] = [
     name: "Dubai",
     slug: "dubai",
     region: "International",
+    experience: "city",
     summary: "Flights, hotels, transfers, family holidays, shopping and group trips.",
     service: "holiday-package",
   },
@@ -183,6 +201,7 @@ export const destinationListings: DestinationListing[] = [
     name: "India",
     slug: "india",
     region: "International",
+    experience: "city",
     summary: "Flight options from Nairobi to major Indian cities, including family and group travel.",
     service: "flights",
   },
@@ -190,6 +209,7 @@ export const destinationListings: DestinationListing[] = [
     name: "Zanzibar",
     slug: "zanzibar",
     region: "International",
+    experience: "beach",
     summary: "Beach holiday enquiries with flights, hotels and airport transfers.",
     service: "holiday-package",
   },
@@ -197,6 +217,7 @@ export const destinationListings: DestinationListing[] = [
     name: "Mauritius",
     slug: "mauritius",
     region: "International",
+    experience: "beach",
     summary: "Island holiday planning for couples, families and special occasions.",
     service: "holiday-package",
   },
@@ -204,6 +225,7 @@ export const destinationListings: DestinationListing[] = [
     name: "South Africa",
     slug: "south-africa",
     region: "International",
+    experience: "city",
     summary: "City, coast and safari-style holiday enquiries with flight support.",
     service: "holiday-package",
   },
@@ -211,6 +233,7 @@ export const destinationListings: DestinationListing[] = [
     name: "Turkey",
     slug: "turkey",
     region: "International",
+    experience: "city",
     summary: "Holiday enquiries for Istanbul, leisure trips and group travel.",
     service: "holiday-package",
   },
@@ -218,6 +241,7 @@ export const destinationListings: DestinationListing[] = [
     name: "Thailand",
     slug: "thailand",
     region: "International",
+    experience: "beach",
     summary: "Leisure holiday enquiries with flights, hotels and transfers.",
     service: "holiday-package",
   },

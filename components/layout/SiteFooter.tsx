@@ -5,7 +5,7 @@ import {
   footerServiceNav,
 } from "@/config/navigation";
 import { companyConfig } from "@/config/company";
-import { publishedDestinations, destinations } from "@/data/destinations";
+import { destinationListings, enquiryHref } from "@/data/travel-content";
 import { BrandLogo } from "@/components/layout/BrandLogo";
 import { WhatsAppButton } from "@/components/ui/WhatsAppButton";
 
@@ -13,10 +13,11 @@ const socialEntries = Object.entries(companyConfig.socialLinks).filter(
   ([, url]) => url,
 );
 
+// Same source as the /destinations hub, so the two lists always match.
+const footerDestinations = destinationListings.slice(0, 6);
+
 export function SiteFooter() {
   const year = new Date().getFullYear();
-  const published = publishedDestinations();
-  const upcoming = destinations.filter((d) => !d.published).slice(0, 4);
 
   return (
     <footer className="bg-forest-deep text-cream">
@@ -69,19 +70,16 @@ export function SiteFooter() {
         <nav aria-label="Destinations">
           <h2 className="eyebrow text-gold">Destinations</h2>
           <ul className="mt-4 space-y-2.5">
-            {published.map((d) => (
+            {footerDestinations.map((d) => (
               <li key={d.slug}>
                 <Link
-                  href={`/destinations/${d.slug}`}
+                  href={
+                    d.published
+                      ? `/destinations/${d.slug}`
+                      : enquiryHref({ service: d.service, destination: d.name })
+                  }
                   className="text-sm text-cream-soft hover:text-gold"
                 >
-                  {d.name}
-                </Link>
-              </li>
-            ))}
-            {upcoming.map((d) => (
-              <li key={d.slug}>
-                <Link href="/destinations" className="text-sm text-cream-soft hover:text-gold">
                   {d.name}
                 </Link>
               </li>

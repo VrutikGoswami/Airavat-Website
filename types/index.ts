@@ -122,11 +122,25 @@ export type Service = {
   headline: string;
   summary: string;
   heroImage: string;
+  /** Distinct one-line intro for the "What we arrange" section (never the hero summary). */
+  arrangeIntro: string;
   /** What a customer can ask this desk to arrange. */
   requestables: string[];
   audiences: string[];
+  /** 1–2 bullets tailored to this service, appended to the shared "What to send" basics. */
+  sendBasics?: string[];
   editorial: { title: string; body: string }[];
   faqIds: string[];
+  /**
+   * Indicative (never priced) guidance shown on the top service pages so
+   * customers understand what a quotation will contain before enquiring.
+   */
+  quotationGuide?: {
+    covers: string[];
+    indicative?: string;
+    leadTime: string;
+    excludes?: string[];
+  };
   relatedServiceSlugs: ServiceSlug[];
   cta: { label: string; whatsappMessage: string };
 };

@@ -1,19 +1,33 @@
 export type NavLink = { label: string; href: string; description?: string };
 
-export const primaryNav: NavLink[] = [
+/** A top-nav item is either a direct link or a group with a dropdown of links. */
+export type NavItem = { label: string; href?: string; children?: NavLink[] };
+
+export const primaryNav: NavItem[] = [
   { label: "Holidays", href: "/holiday-packages" },
-  { label: "Flights & Hotels", href: "/flights" },
+  {
+    label: "Flights & Hotels",
+    children: [
+      { label: "Flights", href: "/flights" },
+      { label: "Hotels", href: "/hotels" },
+      { label: "Transport & Transfers", href: "/transport" },
+    ],
+  },
   { label: "Safaris", href: "/tours-and-safaris" },
-  { label: "Business & Groups", href: "/corporate-travel" },
+  {
+    label: "Business & Groups",
+    children: [
+      { label: "Corporate Travel", href: "/corporate-travel" },
+      { label: "Group Travel", href: "/group-travel" },
+    ],
+  },
   { label: "Destinations", href: "/destinations" },
   { label: "About", href: "/about" },
 ];
 
-/** Extra links that only appear inside the mobile drawer and footer. */
+/** Extra links for the mobile drawer (services now live under primary groups). */
 export const secondaryNav: NavLink[] = [
   { label: "Contact", href: "/contact" },
-  { label: "Transport & Transfers", href: "/transport" },
-  { label: "Group Travel", href: "/group-travel" },
   { label: "Reviews", href: "/reviews" },
   { label: "FAQ", href: "/faq" },
 ];

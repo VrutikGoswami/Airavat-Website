@@ -123,17 +123,38 @@ export function MobileNavigation({ solidHeader }: { solidHeader: boolean }) {
 
             <nav aria-label="Primary" className="mt-8">
               <ul className="space-y-1">
-                {primaryNav.map((item) => (
-                  <li key={item.href}>
-                    <Link
-                      href={item.href}
-                      aria-current={pathname === item.href ? "page" : undefined}
-                      className="block py-3 text-lg font-semibold hover:text-gold"
-                    >
-                      {item.label}
-                    </Link>
-                  </li>
-                ))}
+                {primaryNav.map((item) =>
+                  item.children ? (
+                    <li key={item.label} className="py-1">
+                      <p className="py-2 text-xs font-bold uppercase tracking-wide text-gold">
+                        {item.label}
+                      </p>
+                      <ul>
+                        {item.children.map((child) => (
+                          <li key={child.href}>
+                            <Link
+                              href={child.href}
+                              aria-current={pathname === child.href ? "page" : undefined}
+                              className="block py-2.5 pl-3 text-base font-semibold hover:text-gold"
+                            >
+                              {child.label}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </li>
+                  ) : (
+                    <li key={item.href}>
+                      <Link
+                        href={item.href!}
+                        aria-current={pathname === item.href ? "page" : undefined}
+                        className="block py-3 text-lg font-semibold hover:text-gold"
+                      >
+                        {item.label}
+                      </Link>
+                    </li>
+                  ),
+                )}
               </ul>
             </nav>
 

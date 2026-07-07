@@ -278,7 +278,15 @@ export default async function DestinationPage({
       {destinationFaqs.length > 0 ? (
         <section className="bg-sand/60">
           <div className="container-site grid gap-10 py-16 sm:py-20 lg:grid-cols-[1fr_1.6fr] lg:gap-20">
-            <SectionHeading eyebrow="Questions" title={`Planning ${destination.name}: asked often`} />
+            <div>
+              <SectionHeading eyebrow="Questions" title={`Planning ${destination.name}: asked often`} />
+              <Link
+                href="/faq"
+                className="mt-6 inline-block text-sm font-semibold text-ochre underline underline-offset-4 hover:text-clay"
+              >
+                More questions → FAQ
+              </Link>
+            </div>
             <FAQAccordion items={destinationFaqs} />
           </div>
         </section>
