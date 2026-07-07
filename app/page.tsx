@@ -3,38 +3,21 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { getActiveCampaign } from "@/config/campaigns";
 import { destinations } from "@/data/destinations";
-import { itineraryIdeas } from "@/data/itineraries";
+import { enquiryHref, popularRoutes, travelCategories } from "@/data/travel-content";
 import { ButtonLink } from "@/components/ui/Button";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { WhatsAppButton } from "@/components/ui/WhatsAppButton";
+import { PlanningStarter } from "@/components/forms/PlanningStarter";
+import { CurrentOffers } from "@/components/editorial/CurrentOffers";
 import { EditorialCTA } from "@/components/editorial/EditorialCTA";
 import { ProcessTimeline } from "@/components/editorial/ProcessTimeline";
 import { TrustStatement } from "@/components/editorial/TrustStatement";
-import { ItineraryCard } from "@/components/destination/ItineraryCard";
 
 export const metadata: Metadata = {
   title: "Tours & Travel from Nairobi — Flights, Safaris, Hotels & Holidays",
   description:
     "Kenya-based travel consultants arranging flights, hotels, Maasai Mara safaris, transport and complete holidays. Tell us what you need and receive current options — assisted planning, not a booking engine.",
 };
-
-const travelPaths = [
-  {
-    title: "Holidays & Safaris",
-    body: "Kenya safaris, beach breaks and complete holiday packages.",
-    href: "/request-a-quote?service=holiday-package",
-  },
-  {
-    title: "Flights & Hotels",
-    body: "Flight options, hotel stays and airport transfers arranged together.",
-    href: "/request-a-quote?service=flights",
-  },
-  {
-    title: "Business & Group Travel",
-    body: "Corporate trips, retreats, school groups and multi-traveller logistics.",
-    href: "/request-a-quote?service=corporate",
-  },
-];
 
 export default function HomePage() {
   const campaign = getActiveCampaign();
@@ -90,7 +73,7 @@ export default function HomePage() {
 
       {/* ---------------------------------------------- enquiry starter */}
       <section className="bg-sand/60">
-        <div className="container-site grid gap-6 py-12 sm:py-14 lg:grid-cols-[1fr_auto] lg:items-center">
+        <div className="container-site grid gap-8 py-12 sm:py-14 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
           <div>
             <p className="eyebrow text-ochre">Two-minute enquiry</p>
             <h2 className="display-serif mt-2 text-3xl sm:text-4xl">
@@ -101,33 +84,70 @@ export default function HomePage() {
               start. No passport, payment or booking documents are requested here.
             </p>
           </div>
-          <ButtonLink href="/request-a-quote" size="lg">
-            Start enquiry
-          </ButtonLink>
+          <PlanningStarter />
         </div>
       </section>
 
-      {/* ------------------------------------------------ three paths */}
+      {/* --------------------------------------------- popular right now */}
       <section className="container-site py-16 sm:py-20">
         <SectionHeading
-          eyebrow="Choose a path"
-          title="What do you need arranged?"
-          lede="Pick the closest match. The enquiry form opens with the right service selected."
+          eyebrow="Popular right now"
+          title="Fast routes into the right enquiry"
+          lede="No live fares are shown here. A consultant checks current airline, hotel, camp and transfer options for your dates."
         />
-        <div className="mt-10 grid gap-4 lg:grid-cols-3">
-          {travelPaths.map((path) => (
-            <Link
-              key={path.title}
-              href={path.href}
-              className="group border border-parchment bg-ivory p-6 transition-colors hover:border-ochre hover:bg-sand/60"
-            >
-              <h3 className="display-serif text-2xl group-hover:text-clay">{path.title}</h3>
-              <p className="mt-3 text-sm leading-relaxed text-ink-soft">{path.body}</p>
-              <span className="mt-5 inline-block text-sm font-bold text-ochre">
-                Start this enquiry
-              </span>
-            </Link>
+        <div className="mt-10 grid gap-5 lg:grid-cols-3">
+          {popularRoutes.map((route) => (
+            <article key={route.id} className="border border-parchment bg-ivory p-6">
+              <p className="eyebrow text-[10px] text-stone">{route.eyebrow}</p>
+              <h3 className="display-serif mt-1 text-2xl">{route.title}</h3>
+              <p className="mt-3 text-sm leading-relaxed text-ink-soft">{route.summary}</p>
+              <ul className="mt-5 space-y-2 text-sm leading-relaxed text-ink-soft">
+                {route.highlights.map((highlight) => (
+                  <li key={highlight} className="border-l-2 border-gold/70 pl-3">
+                    {highlight}
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <ButtonLink
+                  href={enquiryHref(route.enquiry)}
+                  className="w-full sm:w-auto"
+                >
+                  {route.primaryAction}
+                </ButtonLink>
+                <WhatsAppButton
+                  trackingSource={`popular-${route.id}`}
+                  message={route.whatsappMessage}
+                  label="WhatsApp"
+                  variant="ghost"
+                  className="w-full justify-start px-0 sm:w-auto"
+                />
+              </div>
+            </article>
           ))}
+        </div>
+      </section>
+
+      {/* --------------------------------------------- travel categories */}
+      <section className="bg-sand/50">
+        <div className="container-site py-14 sm:py-16">
+          <SectionHeading
+            eyebrow="Browse by need"
+            title="Simple travel categories"
+            lede="Choose a category and the shared enquiry flow opens with the closest context."
+          />
+          <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {travelCategories.map((category) => (
+              <Link
+                key={category.title}
+                href={category.href}
+                className="group border border-parchment bg-ivory p-5 transition-colors hover:border-ochre hover:bg-cream"
+              >
+                <h3 className="font-bold group-hover:text-clay">{category.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-ink-soft">{category.summary}</p>
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -178,23 +198,7 @@ export default function HomePage() {
         </section>
       ) : null}
 
-      {/* ----------------------------------------------------- itineraries */}
-      <section className="container-site py-16 sm:py-20 lg:py-24">
-        <div className="flex flex-wrap items-end justify-between gap-6">
-          <SectionHeading
-            eyebrow="Trip ideas"
-            title="Featured starting points"
-            lede="Use these as a shortcut. Each idea can be adjusted for dates, budget and pace."
-          />
-        </div>
-        <ul className="mt-12 grid gap-x-8 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
-          {itineraryIdeas.slice(0, 3).map((idea) => (
-            <li key={idea.slug}>
-              <ItineraryCard idea={idea} />
-            </li>
-          ))}
-        </ul>
-      </section>
+      <CurrentOffers />
 
       {/* ----------------------------------------------------------- trust */}
       <section className="rule-top">

@@ -116,6 +116,14 @@ export function GuidedQuoteForm() {
       const known = destinations.find((d) => d.slug === destinationParam);
       setValue("destination", known ? `${known.name}, ${known.country}` : destinationParam);
     }
+    const originParam = searchParams.get("origin");
+    if (originParam) {
+      setValue("departureCity", originParam);
+    }
+    const offerParam = searchParams.get("offer");
+    if (offerParam) {
+      setValue("notes", `Offer enquiry: ${offerParam}`);
+    }
     const whenParam = searchParams.get("when");
     if (whenParam && /^\d{4}-\d{2}-\d{2}$/.test(whenParam)) {
       setValue("departureDate", whenParam);
