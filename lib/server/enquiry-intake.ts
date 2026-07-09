@@ -1,6 +1,9 @@
 import type { QuoteFormValues } from "@/lib/validation/quote";
 import type { TravelEnquiry } from "@/types";
 
+type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
+type JsonRecord = Record<string, JsonValue>;
+
 type SourceContext = {
   landingPage?: string;
   referrer?: string;
@@ -43,9 +46,96 @@ function customerType(service: QuoteFormValues["service"]): "individual" | "fami
 }
 
 function crmService(service: QuoteFormValues["service"]) {
-  if (service === "hotels") return "hotel";
-  if (service === "not-sure") return "holiday-package";
-  return service;
+  switch (service) {
+    case "flights":
+      return "flight";
+    case "hotels":
+      return "hotel";
+    case "safari":
+      return "tour_safari";
+    case "corporate":
+    case "group":
+      return service;
+    case "holiday-package":
+    case "transport":
+    case "not-sure":
+      return "holiday_package";
+  }
+}
+
+function budgetValue(budget: QuoteFormValues["budget"]): number | null {
+  switch (budget) {
+    case "under-100k":
+      return 100000;
+    case "100k-300k":
+      return 300000;
+    case "300k-700k":
+      return 700000;
+    case "over-700k":
+      return 1000000;
+    case "not-sure":
+      return null;
+  }
+}
+
+function configured(value: string | undefined): value is string {
+  return Boolean(value && !value.startsWith("PASTE_") && !value.endsWith("_HERE"));
+}
+
+function crmEnv(): { url: string; serviceKey: string } | null {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!configured(url) || !configured(serviceKey)) return null;
+  return { url: url.replace(/\/$/, ""), serviceKey };
+}
+
+async function crmFetch(path: string, init: RequestInit = {}) {
+  const env = crmEnv();
+  if (!env) return null;
+  return fetch(`${env.url}/rest/v1/${path}`, {
+    ...init,
+    headers: {
+      apikey: env.serviceKey,
+      Authorization: `Bearer ${env.serviceKey}`,
+      "Content-Type": "application/json",
+      ...(init.headers ?? {}),
+    },
+  });
+}
+
+async function readRows<T extends JsonRecord>(table: string, query: string): Promise<T[]> {
+  const response = await crmFetch(`${table}?${query}`);
+  if (!response) return [];
+  if (!response.ok) {
+    throw new Error((await response.text().catch(() => "")) || `Could not read ${table}.`);
+  }
+  return await response.json() as T[];
+}
+
+async function insertRow<T extends JsonRecord>(table: string, row: JsonRecord): Promise<T> {
+  const response = await crmFetch(table, {
+    method: "POST",
+    headers: { Prefer: "return=representation" },
+    body: JSON.stringify(row),
+  });
+  if (!response?.ok) {
+    throw new Error((await response?.text().catch(() => "")) || `Could not insert ${table}.`);
+  }
+  const rows = await response.json() as T[];
+  return rows[0];
+}
+
+async function updateRow<T extends JsonRecord>(table: string, id: string, row: JsonRecord): Promise<T> {
+  const response = await crmFetch(`${table}?id=eq.${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    headers: { Prefer: "return=representation" },
+    body: JSON.stringify(row),
+  });
+  if (!response?.ok) {
+    throw new Error((await response?.text().catch(() => "")) || `Could not update ${table}.`);
+  }
+  const rows = await response.json() as T[];
+  return rows[0];
 }
 
 export function buildCrmPayload(values: QuoteFormValues, source: SourceContext = {}) {
@@ -137,30 +227,91 @@ export async function saveToSupabaseCrm(
   values: QuoteFormValues,
   source: SourceContext = {},
 ): Promise<IntakeResult | null> {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !serviceKey) return null;
+  if (!crmEnv()) return null;
 
   const payload = buildCrmPayload(values, source);
-  const response = await fetch(`${url.replace(/\/$/, "")}/rest/v1/rpc/create_website_enquiry`, {
-    method: "POST",
-    headers: {
-      apikey: serviceKey,
-      Authorization: `Bearer ${serviceKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      p_reference: reference,
-      p_customer: payload.customer,
-      p_enquiry: payload.enquiry,
-      p_source: payload.source,
-    }),
+  const phone = String(payload.customer.whatsapp);
+  const email = typeof payload.customer.email === "string" ? payload.customer.email : undefined;
+  const [consultant] = await readRows<{ id: string; role: string }>(
+    "users",
+    "select=id,role&role=eq.consultant&order=created_at.asc&limit=1",
+  );
+  const [fallbackUser] = consultant
+    ? []
+    : await readRows<{ id: string; role: string }>("users", "select=id,role&order=created_at.asc&limit=1");
+  const assignedTo = consultant?.id ?? fallbackUser?.id ?? null;
+
+  const [phoneMatch] = await readRows<{ id: string }>(
+    "customers",
+    `select=*&whatsapp_number=eq.${encodeURIComponent(phone)}&order=updated_at.desc&limit=1`,
+  );
+  const [emailMatch] = phoneMatch || !email
+    ? []
+    : await readRows<{ id: string }>(
+        "customers",
+        `select=*&email=eq.${encodeURIComponent(email)}&order=updated_at.desc&limit=1`,
+      );
+
+  const customerPayload: JsonRecord = {
+    name: String(payload.customer.name),
+    whatsapp_number: phone,
+    email: email ?? null,
+    customer_type: String(payload.customer.type ?? "individual"),
+    preferred_channel: String(payload.customer.preferred_contact ?? "whatsapp"),
+    preferences: null,
+    assigned_to: assignedTo,
+    created_by: assignedTo,
+  };
+
+  const customer = phoneMatch ?? emailMatch
+    ? await updateRow<{ id: string }>("customers", (phoneMatch ?? emailMatch).id, customerPayload)
+    : await insertRow<{ id: string }>("customers", customerPayload);
+
+  const enquiry = await insertRow<{ id: string }>("enquiries", {
+    customer_id: customer.id,
+    service_type: String(payload.enquiry.service),
+    origin: typeof payload.enquiry.origin === "string" ? payload.enquiry.origin : null,
+    destination: String(payload.enquiry.destination ?? "Not sure"),
+    travel_start: typeof payload.enquiry.departure_date === "string" ? payload.enquiry.departure_date : null,
+    travel_end: typeof payload.enquiry.return_date === "string" ? payload.enquiry.return_date : null,
+    travellers: Number(payload.enquiry.adults ?? 1) + Number(payload.enquiry.children ?? 0) + Number(payload.enquiry.infants ?? 0),
+    budget: budgetValue(values.budget),
+    budget_currency: "KES",
+    requirements: JSON.stringify({ reference, ...payload.enquiry, source: payload.source }, null, 2),
+    lead_source: "website",
+    stage: "new_enquiry",
+    waiting_on: "our_team",
+    next_action: "Review website enquiry",
+    next_action_date: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+    assigned_to: assignedTo,
+    created_by: assignedTo,
   });
 
-  if (!response.ok) {
-    const message = await response.text().catch(() => "");
-    throw new Error(message || "Could not save enquiry to CRM.");
-  }
+  await insertRow("tasks", {
+    title: `Follow up website enquiry ${reference}`,
+    task_type: "follow_up_call",
+    customer_id: customer.id,
+    enquiry_id: enquiry.id,
+    assigned_to: assignedTo,
+    due_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    priority: "normal",
+    status: "open",
+    auto_generated: true,
+    created_by: assignedTo,
+  });
+
+  await insertRow("activity_logs", {
+    entity_type: "enquiry",
+    entity_id: enquiry.id,
+    action: "website-form",
+    detail: {
+      summary: `Website enquiry ${reference} received`,
+      customer_id: customer.id,
+      enquiry_id: enquiry.id,
+      source: payload.source,
+    },
+    actor: null,
+  });
 
   return { reference, storedIn: "supabase" };
 }
