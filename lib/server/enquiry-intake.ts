@@ -204,6 +204,7 @@ export function buildCrmPayload(values: QuoteFormValues, source: SourceContext =
       budget: values.budget,
       notes: values.notes,
       accessibility: values.accessibilityNeeds,
+      dietary_needs: values.dietaryNeeds,
       service_details: serviceSpecific,
     }),
     source: compactObject({
