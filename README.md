@@ -77,6 +77,12 @@ Key design decisions:
 - **Future integrations are seams, not fakes.** `lib/integrations` defines typed interfaces
   for Amadeus, CRM, WhatsApp Business, payments and hotel contracts. Only the in-memory
   enquiry store is implemented.
+- **Approved rates are database-driven.** The hotel finder reads only active, approved
+  Supabase rows on the server. Static TypeScript rate cards remain as a migration fallback;
+  an approved database contract replaces the matching static hotel/market/board catalog.
+- **Supplier costs stay private.** The browser receives computed stay quotes only. Net
+  contracts receive the configured markup server-side and neither raw rows nor pricing
+  basis are exposed by the public API.
 
 ---
 
@@ -111,6 +117,8 @@ Content:
 Infrastructure:
 
 - `NEXT_PUBLIC_SITE_URL` — canonical origin for metadata/sitemap.
+- `NEXT_PUBLIC_SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` — the CRM Supabase project used
+  for approved hotel rates. The service key must be configured only in server environments.
 - `NEXT_PUBLIC_MAP_TILE_URL` / `NEXT_PUBLIC_MAP_PROVIDER_KEY` — branded map tile URL
   template, for example `https://tiles.example.com/{z}/{x}/{y}.png?key={key}`.
   Development falls back to OpenStreetMap raster tiles.

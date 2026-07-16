@@ -6,7 +6,6 @@ import type {
   RateMarket,
   RateSeasonName,
 } from "@/types/rates";
-import { sheetsForDestination } from "@/data/rates";
 import { RATE_MARKUP_PERCENT, RATE_ROUNDING_STEP } from "@/config/rates";
 
 /**
@@ -149,13 +148,12 @@ export function quoteHotel(
     return { ...base, unavailableReason: "Check-out must be after check-in." };
   }
 
-  // Resolve the rate period covering each night; dates compare lexically.
-  const nightPeriods = nights.map((night) => ({
-    night,
-    period: sheet.periods.find((p) => p.start <= night && night <= p.end),
-  }));
-
-  const uncovered = nightPeriods.filter((n) => !n.period).map((n) => n.night);
+  // A hotel may publish distinct date bands for different room types. Resolve
+  // coverage per room and occupancy below instead of choosing one global
+  // period for the entire hotel night.
+  const uncovered = nights.filter(
+    (night) => !sheet.periods.some((period) => period.start <= night && night <= period.end),
+  );
   if (uncovered.length > 0) {
     return {
       ...base,
@@ -166,8 +164,12 @@ export function quoteHotel(
   }
 
   const seasons: RateSeasonName[] = [];
-  for (const { period } of nightPeriods) {
-    if (period && !seasons.includes(period.season)) seasons.push(period.season);
+  for (const night of nights) {
+    for (const period of sheet.periods) {
+      if (period.start <= night && night <= period.end && !seasons.includes(period.season)) {
+        seasons.push(period.season);
+      }
+    }
   }
 
   const rooms: RoomTypeQuote[] = sheet.roomTypes.map((roomType) => {
@@ -175,7 +177,13 @@ export function quoteHotel(
     for (const key of OCCUPANCY_KEYS) {
       let total = 0;
       let covered = true;
-      for (const { period } of nightPeriods) {
+      for (const night of nights) {
+        const period = sheet.periods.find(
+          (candidate) =>
+            candidate.start <= night &&
+            night <= candidate.end &&
+            typeof candidate.rates[roomType.id]?.[key] === "number",
+        );
         const net = period?.rates[roomType.id]?.[key];
         if (typeof net !== "number") {
           covered = false;
@@ -203,12 +211,14 @@ export function quoteHotel(
 
 /** Quotes every hotel with a rate sheet in the destination for one market. */
 export function quoteDestination(
+  sheets: HotelRateSheet[],
   destinationSlug: string,
   checkIn: string,
   checkOut: string,
   market: RateMarket = "east-african-resident",
 ): HotelQuote[] {
-  return sheetsForDestination(destinationSlug)
+  return sheets
+    .filter((sheet) => sheet.destinationSlug === destinationSlug)
     .filter((sheet) => sheet.market === market || sheet.market === "all")
     .map((sheet) => quoteHotel(sheet, checkIn, checkOut))
     .sort((a, b) => {

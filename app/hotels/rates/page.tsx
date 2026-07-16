@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { rateDestinations } from "@/data/rates";
+import { getRateDestinations } from "@/lib/rate-catalog";
 import { RateFinder } from "@/components/rates/RateFinder";
 import { PageHero } from "@/components/editorial/PageHero";
 import { EditorialCTA } from "@/components/editorial/EditorialCTA";
@@ -10,8 +10,8 @@ export const metadata: Metadata = {
     "Check East African resident rates for safari camps and lodges by destination and travel dates — full-board prices per room, with seasonal pricing shown honestly.",
 };
 
-export default function HotelRatesPage() {
-  const destinations = rateDestinations();
+export default async function HotelRatesPage() {
+  const destinations = await getRateDestinations();
 
   return (
     <>

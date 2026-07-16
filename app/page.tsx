@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { getActiveCampaign } from "@/config/campaigns";
 import { destinations } from "@/data/destinations";
-import { rateDestinations } from "@/data/rates";
+import { getRateDestinations } from "@/lib/rate-catalog";
 import { enquiryHref, popularRoutes, travelCategories } from "@/data/travel-content";
 import { ButtonLink } from "@/components/ui/Button";
 import { SectionHeading } from "@/components/ui/SectionHeading";
@@ -20,10 +20,10 @@ export const metadata: Metadata = {
     "Kenya-based travel consultants arranging flights, hotels, Maasai Mara safaris, transport and complete holidays. Tell us what you need and receive current options — assisted planning, not a booking engine.",
 };
 
-export default function HomePage() {
+export default async function HomePage() {
   const campaign = getActiveCampaign();
   const mara = destinations.find((d) => d.slug === "maasai-mara")!;
-  const hotelRateDestinations = rateDestinations();
+  const hotelRateDestinations = await getRateDestinations();
 
   return (
     <>

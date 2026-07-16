@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { quoteDestination, isIsoDate, stayNights, ISO_DATE_PATTERN } from "@/lib/rates";
-import { rateDestinations } from "@/data/rates";
+import { getRateDestinations, getRateSheetsForDestination } from "@/lib/rate-catalog";
 import { RATE_MAX_NIGHTS } from "@/config/rates";
 
 /**
@@ -49,10 +49,12 @@ export async function GET(request: Request) {
       { status: 422 },
     );
   }
-  if (!rateDestinations().some((d) => d.slug === destination)) {
+  const destinations = await getRateDestinations();
+  if (!destinations.some((d) => d.slug === destination)) {
     return NextResponse.json({ error: "We don't have rates loaded for that destination yet." }, { status: 404 });
   }
 
-  const quotes = quoteDestination(destination, checkIn, checkOut, market);
+  const sheets = await getRateSheetsForDestination(destination);
+  const quotes = quoteDestination(sheets, destination, checkIn, checkOut, market);
   return NextResponse.json({ destination, checkIn, checkOut, market, nights, quotes });
 }
