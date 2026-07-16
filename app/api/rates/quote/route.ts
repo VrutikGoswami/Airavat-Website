@@ -1,0 +1,56 @@
+import { NextResponse } from "next/server";
+import { z } from "zod";
+import { quoteDestination, isIsoDate, stayNights, ISO_DATE_PATTERN } from "@/lib/rates";
+import { rateDestinations } from "@/data/rates";
+import { RATE_MAX_NIGHTS } from "@/config/rates";
+
+/**
+ * Public rate lookup. Computes selling prices server-side so the raw
+ * contract sheets (net rates, commissions) never reach the browser.
+ *
+ * GET /api/rates/quote?destination=amboseli&checkIn=2026-07-10&checkOut=2026-07-13
+ */
+
+const querySchema = z.object({
+  destination: z.string().min(1),
+  checkIn: z.string().regex(ISO_DATE_PATTERN, "Use YYYY-MM-DD."),
+  checkOut: z.string().regex(ISO_DATE_PATTERN, "Use YYYY-MM-DD."),
+});
+
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const parsed = querySchema.safeParse({
+    destination: searchParams.get("destination") ?? "",
+    checkIn: searchParams.get("checkIn") ?? "",
+    checkOut: searchParams.get("checkOut") ?? "",
+  });
+
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Please choose a destination and valid dates." },
+      { status: 422 },
+    );
+  }
+
+  const { destination, checkIn, checkOut } = parsed.data;
+
+  if (!isIsoDate(checkIn) || !isIsoDate(checkOut)) {
+    return NextResponse.json({ error: "Those dates don't exist — please check them." }, { status: 422 });
+  }
+  if (checkOut <= checkIn) {
+    return NextResponse.json({ error: "Check-out must be after check-in." }, { status: 422 });
+  }
+  const nights = stayNights(checkIn, checkOut).length;
+  if (nights > RATE_MAX_NIGHTS) {
+    return NextResponse.json(
+      { error: `We can quote up to ${RATE_MAX_NIGHTS} nights online — for longer stays, send an enquiry.` },
+      { status: 422 },
+    );
+  }
+  if (!rateDestinations().some((d) => d.slug === destination)) {
+    return NextResponse.json({ error: "We don't have rates loaded for that destination yet." }, { status: 404 });
+  }
+
+  const quotes = quoteDestination(destination, checkIn, checkOut);
+  return NextResponse.json({ destination, checkIn, checkOut, nights, quotes });
+}
