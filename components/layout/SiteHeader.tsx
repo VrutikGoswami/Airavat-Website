@@ -45,7 +45,7 @@ function NavDropdown({ item, pathname }: { item: NavItem; pathname: string }) {
       </button>
       <ul
         hidden={!open}
-        className="absolute left-0 top-full z-50 mt-2 min-w-56 border border-clay/20 bg-[#f6b36f] p-1 shadow-lg"
+        className="absolute left-0 top-full z-50 min-w-56 border border-clay/20 bg-[#f6b36f] p-1 pt-3 shadow-lg"
       >
         {children.map((child) => (
           <li key={child.href}>
