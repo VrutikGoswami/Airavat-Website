@@ -1,7 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import type { FormEvent } from "react";
+import { ArrowUpRight } from "lucide-react";
 import type { RateDestinationOption } from "@/data/rates";
 import type { HotelQuote, RoomTypeQuote } from "@/lib/rates";
 import { Button, ButtonLink } from "@/components/ui/Button";
@@ -61,6 +63,61 @@ function formatDate(iso: string): string {
     month: "short",
     year: "numeric",
   });
+}
+
+function rateEnquiryHref({
+  quote,
+  room,
+  occupancy,
+  total,
+  perNight,
+  checkIn,
+  checkOut,
+  market,
+}: {
+  quote: HotelQuote;
+  room: RoomTypeQuote;
+  occupancy: string;
+  total: number;
+  perNight: number;
+  checkIn: string;
+  checkOut: string;
+  market: Market;
+}): string {
+  const params = new URLSearchParams({
+    service: "hotels",
+    rateSelection: "1",
+    destination: quote.destinationName,
+    checkIn,
+    checkOut,
+    market,
+    hotel: quote.hotelName,
+    room: room.roomTypeName,
+    occupancy,
+    board: quote.board,
+    currency: quote.currency,
+    total: String(total),
+    perNight: String(perNight),
+  });
+
+  return `/request-a-quote?${params.toString()}`;
+}
+
+function generalHotelEnquiryHref(
+  quote: HotelQuote,
+  checkIn: string,
+  checkOut: string,
+  market: Market,
+): string {
+  const params = new URLSearchParams({
+    service: "hotels",
+    destination: quote.destinationName,
+    checkIn,
+    checkOut,
+    market,
+    hotel: quote.hotelName,
+  });
+  return `/request-a-quote?${params.toString()}`;
 }
 
 export function RateFinder({ destinations }: { destinations: RateDestinationOption[] }) {
@@ -192,7 +249,13 @@ export function RateFinder({ destinations }: { destinations: RateDestinationOpti
           </p>
 
           {hotelGroups.map((group) => (
-            <HotelCard key={group[0].hotelSlug} quotes={group} />
+            <HotelCard
+              key={group[0].hotelSlug}
+              quotes={group}
+              checkIn={result.checkIn}
+              checkOut={result.checkOut}
+              market={result.market}
+            />
           ))}
 
           <p className="text-xs leading-relaxed text-stone">
@@ -207,7 +270,17 @@ export function RateFinder({ destinations }: { destinations: RateDestinationOpti
   );
 }
 
-function HotelCard({ quotes }: { quotes: HotelQuote[] }) {
+function HotelCard({
+  quotes,
+  checkIn,
+  checkOut,
+  market,
+}: {
+  quotes: HotelQuote[];
+  checkIn: string;
+  checkOut: string;
+  market: Market;
+}) {
   const [selectedSlug, setSelectedSlug] = useState(quotes[0].hotelSlug);
   const quote = quotes.find((q) => q.hotelSlug === selectedSlug) ?? quotes[0];
 
@@ -260,11 +333,16 @@ function HotelCard({ quotes }: { quotes: HotelQuote[] }) {
         </p>
       )}
 
-      {quote.available ? <QuoteBody quote={quote} /> : (
+      {quote.available ? (
+        <QuoteBody quote={quote} checkIn={checkIn} checkOut={checkOut} market={market} />
+      ) : (
         <div className="px-5 py-4 text-sm text-ink-soft sm:px-6">
           <p>{quote.unavailableReason ?? "No rates available for these dates."}</p>
           <div className="mt-4">
-            <ButtonLink href="/request-a-quote?service=hotels" variant="outline">
+            <ButtonLink
+              href={generalHotelEnquiryHref(quote, checkIn, checkOut, market)}
+              variant="outline"
+            >
               Ask us for these dates
             </ButtonLink>
           </div>
@@ -274,7 +352,17 @@ function HotelCard({ quotes }: { quotes: HotelQuote[] }) {
   );
 }
 
-function QuoteBody({ quote }: { quote: HotelQuote }) {
+function QuoteBody({
+  quote,
+  checkIn,
+  checkOut,
+  market,
+}: {
+  quote: HotelQuote;
+  checkIn: string;
+  checkOut: string;
+  market: Market;
+}) {
   const columns = occupancyColumns.filter((col) =>
     quote.rooms.some((room) => room.occupancies[col.key]),
   );
@@ -300,18 +388,34 @@ function QuoteBody({ quote }: { quote: HotelQuote }) {
                 {columns.map((col) => {
                   const occ = room.occupancies[col.key];
                   return (
-                    <td key={col.key} className="py-3 pr-4">
+                    <td key={col.key} className="p-0 align-middle">
                       {occ ? (
-                        <>
-                          <span className="block font-semibold text-ink">
+                        <Link
+                          href={rateEnquiryHref({
+                            quote,
+                            room,
+                            occupancy: col.label,
+                            total: occ.total,
+                            perNight: occ.perNight,
+                            checkIn,
+                            checkOut,
+                            market,
+                          })}
+                          aria-label={`Select ${quote.hotelName}, ${room.roomTypeName}, ${col.label}, ${money(occ.total, quote.currency)} total`}
+                          className="group/rate block min-w-36 border-l-2 border-transparent px-2 py-3 transition-colors hover:border-ochre hover:bg-ochre/10 focus-visible:border-ochre focus-visible:bg-ochre/10"
+                        >
+                          <span className="block font-semibold text-ink group-hover/rate:text-clay">
                             {money(occ.total, quote.currency)}
                           </span>
                           <span className="block text-xs text-stone">
                             {money(occ.perNight, quote.currency)}/night
                           </span>
-                        </>
+                          <span className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-ochre">
+                            Select rate <ArrowUpRight aria-hidden className="size-3.5" />
+                          </span>
+                        </Link>
                       ) : (
-                        <span className="text-stone">—</span>
+                        <span className="block px-2 py-3 text-stone">—</span>
                       )}
                     </td>
                   );
@@ -349,14 +453,6 @@ function QuoteBody({ quote }: { quote: HotelQuote }) {
         </ul>
       ) : null}
 
-      <div className="mt-5">
-        <ButtonLink
-          href={`/request-a-quote?service=hotels&destination=${encodeURIComponent(quote.destinationName)}`}
-          variant="outline"
-        >
-          Enquire about {quote.hotelName}
-        </ButtonLink>
-      </div>
     </div>
   );
 }

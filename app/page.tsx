@@ -3,14 +3,14 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { getActiveCampaign } from "@/config/campaigns";
 import { destinations } from "@/data/destinations";
+import { rateDestinations } from "@/data/rates";
 import { enquiryHref, popularRoutes, travelCategories } from "@/data/travel-content";
 import { ButtonLink } from "@/components/ui/Button";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { WhatsAppButton } from "@/components/ui/WhatsAppButton";
-import { PlanningStarter } from "@/components/forms/PlanningStarter";
+import { RateFinder } from "@/components/rates/RateFinder";
 import { CurrentOffers } from "@/components/editorial/CurrentOffers";
 import { EditorialCTA } from "@/components/editorial/EditorialCTA";
-import { NoBookingNote } from "@/components/editorial/NoBookingNote";
 import { ProcessTimeline } from "@/components/editorial/ProcessTimeline";
 import { TrustStatement } from "@/components/editorial/TrustStatement";
 
@@ -23,6 +23,7 @@ export const metadata: Metadata = {
 export default function HomePage() {
   const campaign = getActiveCampaign();
   const mara = destinations.find((d) => d.slug === "maasai-mara")!;
+  const hotelRateDestinations = rateDestinations();
 
   return (
     <>
@@ -72,21 +73,23 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ---------------------------------------------- enquiry starter */}
-      <section className="bg-sand/60">
-        <div className="container-site grid gap-8 py-12 sm:py-14 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
-          <div>
-            <p className="eyebrow text-ochre">Two-minute enquiry</p>
-            <h2 className="display-serif mt-2 text-3xl sm:text-4xl">
-              Tell us the trip. We will ask only what matters.
+      {/* ------------------------------------------------ hotel rate finder */}
+      <section id="hotel-rates" className="scroll-mt-20 bg-sand/60 lg:scroll-mt-24">
+        <div className="container-site py-14 sm:py-20">
+          <div className="max-w-3xl">
+            <p className="eyebrow text-ochre">Hotel rate finder</p>
+            <h2 className="display-serif mt-2 text-3xl sm:text-4xl lg:text-5xl">
+              Get hotel rates, quickly.
             </h2>
             <p className="mt-4 max-w-2xl text-sm leading-relaxed text-ink-soft sm:text-base">
-              Service, destination, dates, travellers, budget and contact details are enough to
-              start.
+              Choose your destination and dates to compare the hotel and camp rates we currently
+              hold. Select any price to send that exact stay to our team for availability
+              confirmation.
             </p>
-            <NoBookingNote className="mt-4 max-w-2xl" />
           </div>
-          <PlanningStarter />
+          <div className="mt-8 max-w-6xl">
+            <RateFinder destinations={hotelRateDestinations} />
+          </div>
         </div>
       </section>
 

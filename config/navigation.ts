@@ -10,7 +10,7 @@ export const primaryNav: NavItem[] = [
     children: [
       { label: "Flights", href: "/flights" },
       { label: "Hotels", href: "/hotels" },
-      { label: "Hotel Rates", href: "/hotels/rates" },
+      { label: "Hotel Rates", href: "/#hotel-rates" },
       { label: "Transport & Transfers", href: "/transport" },
     ],
   },

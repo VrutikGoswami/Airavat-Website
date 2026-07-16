@@ -97,6 +97,7 @@ export function GuidedQuoteForm() {
   const flexibleDates = watch("flexibleDates");
   const children = watch("children");
   const step = QUOTE_STEPS[stepIndex];
+  const selectedRateFromUrl = searchParams.get("rateSelection") === "1";
 
   // Restore draft, then apply page-context preselection from the URL.
   useEffect(() => {
@@ -147,11 +148,68 @@ export function GuidedQuoteForm() {
         noteLines.push(`Accommodation preference: ${styleParam}`);
       }
     }
-    if (noteLines.length) setValue("notes", noteLines.join(" · "));
-    const whenParam = searchParams.get("when");
+    const checkInParam = searchParams.get("checkIn");
+    const checkOutParam = searchParams.get("checkOut");
+    const whenParam = checkInParam ?? searchParams.get("when");
     if (whenParam && /^\d{4}-\d{2}-\d{2}$/.test(whenParam)) {
       setValue("departureDate", whenParam);
     }
+    if (checkOutParam && /^\d{4}-\d{2}-\d{2}$/.test(checkOutParam)) {
+      setValue("returnDate", checkOutParam);
+    }
+
+    const marketParam = searchParams.get("market");
+    if (marketParam === "east-african-resident") setValue("residency", "resident");
+    if (marketParam === "non-resident") setValue("residency", "non-resident");
+
+    const hotelParam = searchParams.get("hotel");
+    const roomParam = searchParams.get("room");
+    const occupancyParam = searchParams.get("occupancy");
+    const boardParam = searchParams.get("board");
+    const totalParam = searchParams.get("total");
+    const perNightParam = searchParams.get("perNight");
+    const currencyParam = searchParams.get("currency");
+
+    if (
+      boardParam &&
+      ["room-only", "bed-breakfast", "half-board", "full-board", "all-inclusive"].includes(
+        boardParam,
+      )
+    ) {
+      setValue("mealPlan", boardParam as QuoteFormValues["mealPlan"]);
+    }
+    if (hotelParam) {
+      setValue("rooms", 1);
+      setValue(
+        "roomConfiguration",
+        [hotelParam, roomParam, occupancyParam].filter(Boolean).join(" · "),
+      );
+    }
+
+    if (selectedRateFromUrl) {
+      const price = totalParam && currencyParam ? `${currencyParam} ${totalParam} total` : "";
+      const nightly =
+        perNightParam && currencyParam ? `${currencyParam} ${perNightParam} per night` : "";
+      noteLines.push(
+        [
+          "Selected website hotel rate",
+          hotelParam,
+          roomParam,
+          occupancyParam,
+          boardParam?.replaceAll("-", " "),
+          price,
+          nightly,
+        ]
+          .filter(Boolean)
+          .join(" · "),
+      );
+      setStepIndex(QUOTE_STEPS.findIndex((quoteStep) => quoteStep.id === "contact"));
+      setResumedDraft(false);
+    } else if (hotelParam) {
+      noteLines.push(`Hotel preference: ${hotelParam}`);
+    }
+
+    if (noteLines.length) setValue("notes", noteLines.join(" · "));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -346,7 +404,7 @@ export function GuidedQuoteForm() {
         tabIndex={-1}
         className="display-serif text-2xl outline-none sm:text-3xl"
       >
-        {step.title}
+        {selectedRateFromUrl && step.id === "contact" ? "Confirm your details" : step.title}
       </h2>
 
       <div className="mt-7 space-y-5">
@@ -706,6 +764,18 @@ export function GuidedQuoteForm() {
         {/* ---------------------------------------------------------- contact */}
         {step.id === "contact" ? (
           <>
+            {selectedRateFromUrl ? (
+              <div className="border-l-2 border-ochre bg-ochre/10 px-4 py-3">
+                <p className="flex items-center gap-2 text-sm font-bold text-ink">
+                  <CheckCircle2 aria-hidden className="size-4 text-ochre" />
+                  Your selected hotel rate is filled in
+                </p>
+                <p className="mt-1 text-xs leading-relaxed text-ink-soft">
+                  Add your contact details, review the stay below and send the enquiry. A
+                  consultant will confirm availability and the final price before booking.
+                </p>
+              </div>
+            ) : null}
             <TextField
               label="Full name"
               autoComplete="name"
@@ -823,6 +893,22 @@ function ReviewSummary({
       value: BUDGET_LABELS[values.budget],
       step: 1,
     },
+    ...(values.service === "hotels" && values.roomConfiguration
+      ? [
+          {
+            label: "Selected stay",
+            value: `${values.roomConfiguration}${
+              values.mealPlan && values.mealPlan !== "any"
+                ? ` · ${values.mealPlan.replaceAll("-", " ")}`
+                : ""
+            }`,
+            step: 1,
+          },
+        ]
+      : []),
+    ...(values.notes
+      ? [{ label: "Enquiry details", value: values.notes, step: 2 }]
+      : []),
     {
       label: "Contact",
       value: `${values.fullName} · ${values.whatsapp}${
