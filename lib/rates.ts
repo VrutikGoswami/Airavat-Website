@@ -1,6 +1,7 @@
 import type {
   HotelRateSheet,
   OccupancyKey,
+  RateBasis,
   RateBoard,
   RateMarket,
   RateSeasonName,
@@ -77,10 +78,13 @@ export function stayNights(checkIn: string, checkOut: string): string[] {
   return nights;
 }
 
-/** Net contract rate → public selling price. */
-function sellingPrice(net: number): number {
-  if (RATE_MARKUP_PERCENT === 0) return net;
-  const marked = net * (1 + RATE_MARKUP_PERCENT / 100);
+/**
+ * Sheet figure → public selling price. Rack sheets are already selling
+ * prices; net/STO sheets get the configured markup.
+ */
+function sellingPrice(amount: number, basis: RateBasis): number {
+  if (basis === "rack" || RATE_MARKUP_PERCENT <= 0) return amount;
+  const marked = amount * (1 + RATE_MARKUP_PERCENT / 100);
   return Math.ceil(marked / RATE_ROUNDING_STEP) * RATE_ROUNDING_STEP;
 }
 
@@ -99,7 +103,15 @@ function childPolicySummary(sheet: HotelRateSheet): string | undefined {
   return `${parts.join("; ")}.`;
 }
 
-const OCCUPANCY_KEYS: OccupancyKey[] = ["single", "double", "triple", "childSharing"];
+const OCCUPANCY_KEYS: OccupancyKey[] = [
+  "single",
+  "double",
+  "triple",
+  "perUnit",
+  "childSharing",
+  "childTeenSharing",
+  "childThirdBed",
+];
 
 export function quoteHotel(
   sheet: HotelRateSheet,
@@ -126,8 +138,8 @@ export function quoteHotel(
     familySupplements: (sheet.familySupplements ?? []).map((s) => ({
       name: s.name,
       maxPax: s.maxPax,
-      perAdultPerNight: sellingPrice(s.perAdultPerNight),
-      perChildPerNight: sellingPrice(s.perChildPerNight),
+      perAdultPerNight: sellingPrice(s.perAdultPerNight, sheet.basis),
+      perChildPerNight: sellingPrice(s.perChildPerNight, sheet.basis),
     })),
     childPolicySummary: childPolicySummary(sheet),
     notes: sheet.notes ?? [],
@@ -169,7 +181,7 @@ export function quoteHotel(
           covered = false;
           break;
         }
-        total += sellingPrice(net);
+        total += sellingPrice(net, sheet.basis);
       }
       if (covered) {
         occupancies[key] = {
@@ -189,13 +201,15 @@ export function quoteHotel(
   return { ...base, available: true, seasons, rooms };
 }
 
-/** Quotes every hotel with a rate sheet in the destination. */
+/** Quotes every hotel with a rate sheet in the destination for one market. */
 export function quoteDestination(
   destinationSlug: string,
   checkIn: string,
   checkOut: string,
+  market: RateMarket = "east-african-resident",
 ): HotelQuote[] {
   return sheetsForDestination(destinationSlug)
+    .filter((sheet) => sheet.market === market || sheet.market === "all")
     .map((sheet) => quoteHotel(sheet, checkIn, checkOut))
     .sort((a, b) => {
       const aMin = cheapestDouble(a);

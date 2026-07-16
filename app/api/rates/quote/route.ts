@@ -15,6 +15,7 @@ const querySchema = z.object({
   destination: z.string().min(1),
   checkIn: z.string().regex(ISO_DATE_PATTERN, "Use YYYY-MM-DD."),
   checkOut: z.string().regex(ISO_DATE_PATTERN, "Use YYYY-MM-DD."),
+  market: z.enum(["east-african-resident", "non-resident"]).default("east-african-resident"),
 });
 
 export async function GET(request: Request) {
@@ -23,6 +24,7 @@ export async function GET(request: Request) {
     destination: searchParams.get("destination") ?? "",
     checkIn: searchParams.get("checkIn") ?? "",
     checkOut: searchParams.get("checkOut") ?? "",
+    market: searchParams.get("market") ?? undefined,
   });
 
   if (!parsed.success) {
@@ -32,7 +34,7 @@ export async function GET(request: Request) {
     );
   }
 
-  const { destination, checkIn, checkOut } = parsed.data;
+  const { destination, checkIn, checkOut, market } = parsed.data;
 
   if (!isIsoDate(checkIn) || !isIsoDate(checkOut)) {
     return NextResponse.json({ error: "Those dates don't exist — please check them." }, { status: 422 });
@@ -51,6 +53,6 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "We don't have rates loaded for that destination yet." }, { status: 404 });
   }
 
-  const quotes = quoteDestination(destination, checkIn, checkOut);
-  return NextResponse.json({ destination, checkIn, checkOut, nights, quotes });
+  const quotes = quoteDestination(destination, checkIn, checkOut, market);
+  return NextResponse.json({ destination, checkIn, checkOut, market, nights, quotes });
 }

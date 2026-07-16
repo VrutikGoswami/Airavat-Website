@@ -34,6 +34,9 @@ const sharedSheet = {
   group: "Maisha Group",
   currency: "KES",
   market: "east-african-resident",
+  // Commissionable gross rates (the guest pays the printed figure; the
+  // agent commission is the margin), so they display unchanged like rack.
+  basis: "rack",
   board: "full-board",
   validFrom: "2026-01-04",
   validTo: "2027-01-03",

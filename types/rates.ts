@@ -8,17 +8,45 @@
  * selling prices, never the raw sheet.
  */
 
-export type RateSeasonName = "green" | "high" | "peak" | "easter" | "festive";
+export type RateSeasonName =
+  | "green"
+  | "low"
+  | "mid"
+  | "regular"
+  | "shoulder"
+  | "high"
+  | "premium"
+  | "peak"
+  | "easter"
+  | "festive"
+  | "christmas";
 
-export type OccupancyKey = "single" | "double" | "triple" | "childSharing";
+export type OccupancyKey =
+  | "single"
+  | "double"
+  | "triple"
+  | "perUnit"
+  | "childSharing"
+  | "childTeenSharing"
+  | "childThirdBed";
 
-/** Per-night room prices for one room type within one seasonal period. */
+/**
+ * Per-night prices for one room type within one seasonal period. All values
+ * are the full price for that occupancy (per-person sheets are converted to
+ * room totals at transcription time; per-child keys stay per child).
+ */
 export type OccupancyRates = {
   single?: number;
   double?: number;
   triple?: number;
-  /** Child (per child-rate ages, typically 4–11) sharing with paying adults. */
+  /** Whole unit/villa price where the sheet prices per unit, not per person. */
+  perUnit?: number;
+  /** Per child (younger band, typically 4–11) sharing with paying adults. */
   childSharing?: number;
+  /** Per older child/teen (e.g. 12–17) where the sheet has a second band. */
+  childTeenSharing?: number;
+  /** Per child in an extra/third bed where priced separately. */
+  childThirdBed?: number;
 };
 
 export type RatePeriod = {
@@ -72,7 +100,15 @@ export type RateBoard =
   | "all-inclusive"
   | "room-only";
 
-export type RateMarket = "east-african-resident" | "non-resident";
+/** "all" = the sheet applies to every guest (no residency distinction). */
+export type RateMarket = "east-african-resident" | "non-resident" | "all";
+
+/**
+ * What the sheet's figures are: "rack" = the hotel's published selling
+ * prices, shown on the site unchanged; "net" = confidential contract/STO
+ * cost rates, marked up before display.
+ */
+export type RateBasis = "rack" | "net";
 
 export type HotelRateSheet = {
   hotelSlug: string;
@@ -83,6 +119,7 @@ export type HotelRateSheet = {
   destinationName: string;
   currency: "KES" | "USD";
   market: RateMarket;
+  basis: RateBasis;
   board: RateBoard;
   /** Overall contract validity (inclusive ISO dates). */
   validFrom: string;
