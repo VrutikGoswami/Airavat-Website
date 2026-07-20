@@ -47,6 +47,7 @@ function sheet(board: RateBoard, slugSuffix: string, ps: RatePeriod[]): HotelRat
     hotelSlug: `jacaranda-iobr-${slugSuffix}`,
     hotelName: "Jacaranda Indian Ocean Beach Resort",
     group: "Jacaranda Hotels",
+    websiteUrl: "https://jacarandahotels.com",
     destinationSlug: "diani",
     destinationName: "Diani Beach",
     currency: "KES",

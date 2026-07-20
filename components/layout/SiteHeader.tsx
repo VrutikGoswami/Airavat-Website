@@ -3,65 +3,12 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import { ChevronDown } from "lucide-react";
-import { primaryNav, type NavItem } from "@/config/navigation";
+import { primaryNav } from "@/config/navigation";
 import { getActiveCampaign } from "@/config/campaigns";
 import { BrandLogo } from "@/components/layout/BrandLogo";
 import { MobileNavigation } from "@/components/layout/MobileNavigation";
 import { WhatsAppButton } from "@/components/ui/WhatsAppButton";
 import { ButtonLink } from "@/components/ui/Button";
-
-/** Accessible top-nav dropdown: opens on hover and on keyboard focus, closes on
- *  Escape or blur, with a correct aria-expanded reflecting real state. */
-function NavDropdown({ item, pathname }: { item: NavItem; pathname: string }) {
-  const [open, setOpen] = useState(false);
-  const children = item.children ?? [];
-  const active = children.some((c) => pathname === c.href);
-
-  return (
-    <li
-      className="relative"
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
-      onFocus={() => setOpen(true)}
-      onBlur={(e) => {
-        if (!e.currentTarget.contains(e.relatedTarget as Node)) setOpen(false);
-      }}
-    >
-      <button
-        type="button"
-        aria-haspopup="true"
-        aria-expanded={open}
-        onClick={() => setOpen((o) => !o)}
-        onKeyDown={(e) => {
-          if (e.key === "Escape") setOpen(false);
-        }}
-        className={`inline-flex items-center gap-1 text-sm font-semibold text-ink transition-colors hover:text-clay ${
-          active ? "underline underline-offset-8 decoration-ochre decoration-2" : ""
-        }`}
-      >
-        {item.label}
-        <ChevronDown aria-hidden className={`size-4 transition-transform ${open ? "rotate-180" : ""}`} />
-      </button>
-      <ul
-        hidden={!open}
-        className="absolute left-0 top-full z-50 min-w-56 border border-clay/20 bg-[#f6b36f] p-1 pt-3 shadow-lg"
-      >
-        {children.map((child) => (
-          <li key={child.href}>
-            <Link
-              href={child.href}
-              aria-current={pathname === child.href ? "page" : undefined}
-              className="block rounded-[3px] px-3 py-2 text-sm font-semibold text-ink transition-colors hover:bg-ochre/25 hover:text-clay"
-            >
-              {child.label}
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </li>
-  );
-}
 
 /**
  * Fixed header that stays available near the top, then clears the page while
@@ -120,32 +67,29 @@ export function SiteHeader() {
               <li>
                 <Link
                   href={`/destinations/${campaign.destinationSlug}`}
-                  className={`text-sm font-semibold ${textCls} ${linkHover} transition-colors`}
+                  className={`inline-flex items-center gap-1.5 text-sm font-semibold ${textCls} ${linkHover} transition-colors`}
                 >
-                  <span className="text-gold" aria-hidden>
-                    ●{" "}
-                  </span>
+                  <span className="size-1.5 rounded-full bg-gold" aria-hidden />
                   Maasai Mara
+                  <span className="hidden text-[11px] font-semibold uppercase tracking-wide text-clay xl:inline">
+                    · Seasonal special
+                  </span>
                 </Link>
               </li>
             ) : null}
-            {primaryNav.map((item) =>
-              item.children ? (
-                <NavDropdown key={item.label} item={item} pathname={pathname} />
-              ) : (
-                <li key={item.href}>
-                  <Link
-                    href={item.href!}
-                    aria-current={pathname === item.href ? "page" : undefined}
-                    className={`text-sm font-semibold ${textCls} ${linkHover} transition-colors ${
-                      pathname === item.href ? "underline underline-offset-8 decoration-ochre decoration-2" : ""
-                    }`}
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              ),
-            )}
+            {primaryNav.map((item) => (
+              <li key={item.href}>
+                <Link
+                  href={item.href!}
+                  aria-current={pathname === item.href ? "page" : undefined}
+                  className={`text-sm font-semibold ${textCls} ${linkHover} transition-colors ${
+                    pathname === item.href ? "underline underline-offset-8 decoration-ochre decoration-2" : ""
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              </li>
+            ))}
           </ul>
         </nav>
 

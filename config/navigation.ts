@@ -3,31 +3,27 @@ export type NavLink = { label: string; href: string; description?: string };
 /** A top-nav item is either a direct link or a group with a dropdown of links. */
 export type NavItem = { label: string; href?: string; children?: NavLink[] };
 
+/**
+ * Booking-first top navigation. Flattened from the old grouped dropdowns to
+ * five direct links so the header reads as a set of actions: find a flight,
+ * find a hotel, plan a package, explore, learn about us. The Maasai Mara
+ * seasonal-special link is prepended by the header when a campaign is live,
+ * and the WhatsApp + Get-a-quote buttons sit to the right.
+ */
 export const primaryNav: NavItem[] = [
-  { label: "Holidays", href: "/holiday-packages" },
-  {
-    label: "Flights & Hotels",
-    children: [
-      { label: "Flights", href: "/flights" },
-      { label: "Hotels", href: "/hotels" },
-      { label: "Hotel Rates", href: "/#hotel-rates" },
-      { label: "Transport & Transfers", href: "/transport" },
-    ],
-  },
-  { label: "Safaris", href: "/tours-and-safaris" },
-  {
-    label: "Business & Groups",
-    children: [
-      { label: "Corporate Travel", href: "/corporate-travel" },
-      { label: "Group Travel", href: "/group-travel" },
-    ],
-  },
+  { label: "Flights", href: "/flights" },
+  { label: "Hotels", href: "/hotels/rates" },
+  { label: "Packages", href: "/holiday-packages" },
   { label: "Destinations", href: "/destinations" },
   { label: "About", href: "/about" },
 ];
 
-/** Extra links for the mobile drawer (services now live under primary groups). */
+/** Secondary links for the mobile drawer and footer overflow. */
 export const secondaryNav: NavLink[] = [
+  { label: "Safaris", href: "/tours-and-safaris" },
+  { label: "Transport & Transfers", href: "/transport" },
+  { label: "Corporate Travel", href: "/corporate-travel" },
+  { label: "Group Travel", href: "/group-travel" },
   { label: "Contact", href: "/contact" },
   { label: "Reviews", href: "/reviews" },
   { label: "FAQ", href: "/faq" },

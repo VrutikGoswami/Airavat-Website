@@ -41,6 +41,8 @@ export type HotelQuote = {
   group?: string;
   destinationSlug: string;
   destinationName: string;
+  websiteUrl?: string;
+  images: string[];
   currency: "KES" | "USD";
   board: RateBoard;
   market: RateMarket;
@@ -125,6 +127,8 @@ export function quoteHotel(
     group: sheet.group,
     destinationSlug: sheet.destinationSlug,
     destinationName: sheet.destinationName,
+    websiteUrl: sheet.websiteUrl,
+    images: sheet.images ?? [],
     currency: sheet.currency,
     board: sheet.board,
     market: sheet.market,

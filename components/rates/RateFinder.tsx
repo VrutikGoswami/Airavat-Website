@@ -1,15 +1,27 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { FormEvent } from "react";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, ChevronDown, ExternalLink, Images, X } from "lucide-react";
 import type { RateDestinationOption } from "@/data/rates";
-import type { HotelQuote, RoomTypeQuote } from "@/lib/rates";
+import type { HotelQuote, OccupancyQuote, RoomTypeQuote } from "@/lib/rates";
+import type { OccupancyKey } from "@/types/rates";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { SelectField, TextField } from "@/components/forms/fields";
 
 type Market = "east-african-resident" | "non-resident";
+type StaysIn = "kenya" | "international";
+
+export type RateFinderInitial = {
+  destination?: string;
+  checkIn?: string;
+  checkOut?: string;
+  adults?: number;
+  children?: number;
+  market?: Market;
+};
 
 type QuoteResponse = {
   destination: string;
@@ -42,7 +54,7 @@ const boardLabels: Record<string, string> = {
   "room-only": "Room only",
 };
 
-const occupancyColumns = [
+const occupancyColumns: { key: OccupancyKey; label: string }[] = [
   { key: "single", label: "Single" },
   { key: "double", label: "Double" },
   { key: "triple", label: "Triple" },
@@ -50,10 +62,17 @@ const occupancyColumns = [
   { key: "childSharing", label: "Child sharing" },
   { key: "childTeenSharing", label: "Teen sharing" },
   { key: "childThirdBed", label: "Child 3rd bed" },
-] as const;
+];
+
+/** The occupancy that best matches the party's adult count. */
+function recommendedOccupancy(adults: number): OccupancyKey {
+  if (adults <= 1) return "single";
+  if (adults === 2) return "double";
+  return "triple";
+}
 
 function money(amount: number, currency: "KES" | "USD"): string {
-  const formatted = new Intl.NumberFormat("en-KE").format(amount);
+  const formatted = new Intl.NumberFormat("en-KE").format(Math.round(amount));
   return currency === "KES" ? `Kshs ${formatted}` : `US$ ${formatted}`;
 }
 
@@ -65,16 +84,15 @@ function formatDate(iso: string): string {
   });
 }
 
-function rateEnquiryHref({
-  quote,
-  room,
-  occupancy,
-  total,
-  perNight,
-  checkIn,
-  checkOut,
-  market,
-}: {
+function nightsBetween(checkIn: string, checkOut: string): number {
+  if (!checkIn || !checkOut) return 0;
+  const start = new Date(`${checkIn}T00:00:00Z`).getTime();
+  const end = new Date(`${checkOut}T00:00:00Z`).getTime();
+  if (Number.isNaN(start) || Number.isNaN(end) || end <= start) return 0;
+  return Math.round((end - start) / 86_400_000);
+}
+
+function rateEnquiryHref(args: {
   quote: HotelQuote;
   room: RoomTypeQuote;
   occupancy: string;
@@ -83,23 +101,28 @@ function rateEnquiryHref({
   checkIn: string;
   checkOut: string;
   market: Market;
+  adults: number;
+  children: number;
+  childAges: string;
 }): string {
   const params = new URLSearchParams({
     service: "hotels",
     rateSelection: "1",
-    destination: quote.destinationName,
-    checkIn,
-    checkOut,
-    market,
-    hotel: quote.hotelName,
-    room: room.roomTypeName,
-    occupancy,
-    board: quote.board,
-    currency: quote.currency,
-    total: String(total),
-    perNight: String(perNight),
+    destination: args.quote.destinationName,
+    checkIn: args.checkIn,
+    checkOut: args.checkOut,
+    market: args.market,
+    hotel: args.quote.hotelName,
+    room: args.room.roomTypeName,
+    occupancy: args.occupancy,
+    board: args.quote.board,
+    currency: args.quote.currency,
+    total: String(args.total),
+    perNight: String(args.perNight),
+    adults: String(args.adults),
+    children: String(args.children),
   });
-
+  if (args.childAges.trim()) params.set("childAges", args.childAges.trim());
   return `/request-a-quote?${params.toString()}`;
 }
 
@@ -108,6 +131,8 @@ function generalHotelEnquiryHref(
   checkIn: string,
   checkOut: string,
   market: Market,
+  adults: number,
+  children: number,
 ): string {
   const params = new URLSearchParams({
     service: "hotels",
@@ -116,44 +141,91 @@ function generalHotelEnquiryHref(
     checkOut,
     market,
     hotel: quote.hotelName,
+    adults: String(adults),
+    children: String(children),
   });
   return `/request-a-quote?${params.toString()}`;
 }
 
-export function RateFinder({ destinations }: { destinations: RateDestinationOption[] }) {
-  const [destination, setDestination] = useState(destinations[0]?.slug ?? "");
-  const [market, setMarket] = useState<Market>("east-african-resident");
-  const [checkIn, setCheckIn] = useState("");
-  const [checkOut, setCheckOut] = useState("");
+export function RateFinder({
+  destinations,
+  initial,
+}: {
+  destinations: RateDestinationOption[];
+  initial?: RateFinderInitial;
+}) {
+  const [staysIn, setStaysIn] = useState<StaysIn>("kenya");
+  const [destination, setDestination] = useState(
+    initial?.destination ?? destinations[0]?.slug ?? "",
+  );
+  const [market, setMarket] = useState<Market>(initial?.market ?? "east-african-resident");
+  const [checkIn, setCheckIn] = useState(initial?.checkIn ?? "");
+  const [checkOut, setCheckOut] = useState(initial?.checkOut ?? "");
+  const [adults, setAdults] = useState(initial?.adults ?? 2);
+  const [children, setChildren] = useState(initial?.children ?? 0);
+  const [childAges, setChildAges] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<QuoteResponse | null>(null);
+  // The party the results were fetched for, so cards stay consistent if the
+  // guest inputs change before the next search.
+  const [party, setParty] = useState({ adults: 2, children: 0, childAges: "" });
 
-  async function onSubmit(event: FormEvent<HTMLFormElement>) {
+  const nights = nightsBetween(checkIn, checkOut);
+
+  const runSearch = useCallback(
+    async (query: { destination: string; checkIn: string; checkOut: string; market: Market }) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const params = new URLSearchParams(query);
+        const res = await fetch(`/api/rates/quote?${params}`);
+        const body = await res.json();
+        if (!res.ok) {
+          setResult(null);
+          setError(
+            typeof body.error === "string" ? body.error : "Something went wrong — please try again.",
+          );
+          return;
+        }
+        setResult(body as QuoteResponse);
+      } catch {
+        setResult(null);
+        setError("We couldn't fetch rates just now — please try again.");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
+
+  function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!destination || !checkIn || !checkOut) {
       setError("Choose a destination, check-in and check-out date.");
       return;
     }
-    setLoading(true);
-    setError(null);
-    try {
-      const params = new URLSearchParams({ destination, checkIn, checkOut, market });
-      const res = await fetch(`/api/rates/quote?${params}`);
-      const body = await res.json();
-      if (!res.ok) {
-        setResult(null);
-        setError(typeof body.error === "string" ? body.error : "Something went wrong — please try again.");
-        return;
-      }
-      setResult(body as QuoteResponse);
-    } catch {
-      setResult(null);
-      setError("We couldn't fetch rates just now — please try again.");
-    } finally {
-      setLoading(false);
-    }
+    setParty({ adults, children, childAges });
+    void runSearch({ destination, checkIn, checkOut, market });
   }
+
+  // Auto-run once when the finder is opened pre-seeded from a search widget.
+  useEffect(() => {
+    if (initial?.destination && initial?.checkIn && initial?.checkOut) {
+      setParty({
+        adults: initial.adults ?? 2,
+        children: initial.children ?? 0,
+        childAges: "",
+      });
+      void runSearch({
+        destination: initial.destination,
+        checkIn: initial.checkIn,
+        checkOut: initial.checkOut,
+        market: initial.market ?? "east-african-resident",
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // One card per hotel; boards become tabs within the card.
   const hotelGroups: HotelQuote[][] = [];
@@ -175,8 +247,42 @@ export function RateFinder({ destinations }: { destinations: RateDestinationOpti
     <div>
       <form
         onSubmit={onSubmit}
-        className="grid gap-4 rounded-[3px] border border-parchment bg-ivory/60 p-5 sm:grid-cols-3 sm:items-end sm:gap-5 sm:p-6"
+        className="grid gap-4 rounded-[3px] border border-parchment bg-ivory/60 p-5 sm:grid-cols-2 sm:items-end sm:gap-5 sm:p-6 lg:grid-cols-4"
       >
+        <fieldset className="sm:col-span-2 lg:col-span-4">
+          <legend className="mb-1.5 block text-sm font-bold">Where are you staying?</legend>
+          <div className="flex flex-wrap gap-2" role="radiogroup">
+            {(
+              [
+                ["kenya", "Kenya", false],
+                ["international", "International (coming soon)", true],
+              ] as Array<[StaysIn, string, boolean]>
+            ).map(([value, label, disabled]) => (
+              <button
+                key={value}
+                type="button"
+                role="radio"
+                aria-checked={staysIn === value}
+                disabled={disabled}
+                onClick={() => setStaysIn(value)}
+                className={`rounded-[3px] border px-4 py-2 text-sm font-semibold transition-colors ${
+                  staysIn === value
+                    ? "border-ochre bg-ochre/10 text-clay"
+                    : "border-parchment bg-ivory text-ink hover:border-stone"
+                } disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-parchment`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          {staysIn === "international" ? (
+            <p className="mt-2 text-xs text-ink-soft">
+              International hotel rates aren&apos;t online yet — tell us your trip and a consultant
+              sends options.
+            </p>
+          ) : null}
+        </fieldset>
+
         <SelectField
           label="Destination"
           value={destination}
@@ -201,13 +307,50 @@ export function RateFinder({ destinations }: { destinations: RateDestinationOpti
           min={checkIn || undefined}
           onChange={(e) => setCheckOut(e.target.value)}
         />
-        <fieldset className="sm:col-span-3">
+        <div className="rounded-[3px] border border-parchment bg-ivory px-3.5 py-2.5 text-sm">
+          <span className="block text-xs font-bold text-stone">Length of stay</span>
+          <span className="mt-0.5 block font-semibold text-ink">
+            {nights > 0 ? `${nights} ${nights === 1 ? "night" : "nights"}` : "Pick your dates"}
+          </span>
+        </div>
+
+        <TextField
+          label="Adults"
+          type="number"
+          min={1}
+          max={20}
+          value={adults}
+          onChange={(e) => setAdults(Math.max(1, Number(e.target.value) || 1))}
+        />
+        <TextField
+          label="Children"
+          type="number"
+          min={0}
+          max={20}
+          required={false}
+          value={children}
+          onChange={(e) => setChildren(Math.max(0, Number(e.target.value) || 0))}
+        />
+        {children > 0 ? (
+          <TextField
+            label="Children's ages"
+            hint="Helps price child rates correctly"
+            required={false}
+            placeholder="e.g. 4, 9"
+            value={childAges}
+            onChange={(e) => setChildAges(e.target.value)}
+          />
+        ) : (
+          <div className="hidden lg:block" aria-hidden />
+        )}
+
+        <fieldset className="sm:col-span-2 lg:col-span-2">
           <legend className="mb-1.5 block text-sm font-bold">Rates for</legend>
           <div className="flex flex-wrap gap-2" role="radiogroup">
             {(
               [
                 ["east-african-resident", "East African residents"],
-                ["non-resident", "International visitors"],
+                ["non-resident", "Overseas visitors"],
               ] as Array<[Market, string]>
             ).map(([value, label]) => (
               <button
@@ -227,8 +370,9 @@ export function RateFinder({ destinations }: { destinations: RateDestinationOpti
             ))}
           </div>
         </fieldset>
-        <div className="sm:col-span-3">
-          <Button type="submit" disabled={loading}>
+
+        <div className="sm:col-span-2 lg:col-span-2 lg:justify-self-end">
+          <Button type="submit" disabled={loading} className="w-full sm:w-auto">
             {loading ? "Checking rates…" : "Show rates"}
           </Button>
         </div>
@@ -242,11 +386,18 @@ export function RateFinder({ destinations }: { destinations: RateDestinationOpti
 
       {result ? (
         <div className="mt-10 space-y-8">
-          <p className="text-sm text-ink-soft">
-            {formatDate(result.checkIn)} – {formatDate(result.checkOut)} ·{" "}
-            {result.nights} {result.nights === 1 ? "night" : "nights"} ·{" "}
-            {hotelGroups.length} {hotelGroups.length === 1 ? "property" : "properties"}
-          </p>
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <p className="text-sm text-ink-soft">
+              {formatDate(result.checkIn)} – {formatDate(result.checkOut)} ·{" "}
+              {result.nights} {result.nights === 1 ? "night" : "nights"} ·{" "}
+              {party.adults} {party.adults === 1 ? "adult" : "adults"}
+              {party.children > 0 ? `, ${party.children} ${party.children === 1 ? "child" : "children"}` : ""}{" "}
+              · {hotelGroups.length} {hotelGroups.length === 1 ? "property" : "properties"}
+            </p>
+            <p className="text-xs font-semibold text-ochre">
+              Select a room rate to send that exact stay for confirmation.
+            </p>
+          </div>
 
           {hotelGroups.map((group) => (
             <HotelCard
@@ -255,14 +406,15 @@ export function RateFinder({ destinations }: { destinations: RateDestinationOpti
               checkIn={result.checkIn}
               checkOut={result.checkOut}
               market={result.market}
+              party={party}
             />
           ))}
 
           <p className="text-xs leading-relaxed text-stone">
-            Prices are for the whole stay and include service charge and current taxes.
-            Seasonal supplements, minimum-stay rules and hotel blackout dates can apply.
-            Availability is not live — a consultant confirms space and the final price
-            before anything is booked.
+            Prices are for the whole stay and include service charge and current taxes. Child
+            pricing depends on ages and is confirmed on enquiry. Seasonal supplements, minimum-stay
+            rules and hotel blackout dates can apply. Availability is not live — a consultant
+            confirms space and the final price before anything is booked.
           </p>
         </div>
       ) : null}
@@ -275,37 +427,61 @@ function HotelCard({
   checkIn,
   checkOut,
   market,
+  party,
 }: {
   quotes: HotelQuote[];
   checkIn: string;
   checkOut: string;
   market: Market;
+  party: { adults: number; children: number; childAges: string };
 }) {
   const [selectedSlug, setSelectedSlug] = useState(quotes[0].hotelSlug);
+  const [galleryOpen, setGalleryOpen] = useState(false);
   const quote = quotes.find((q) => q.hotelSlug === selectedSlug) ?? quotes[0];
 
   return (
     <article className="overflow-hidden rounded-[3px] border border-parchment bg-ivory">
-      <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-parchment px-5 py-4 sm:px-6">
+      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-parchment px-5 py-4 sm:px-6">
         <div>
-          <h3 className="display-serif text-xl text-ink sm:text-2xl">{quote.hotelName}</h3>
+          <button
+            type="button"
+            onClick={() => setGalleryOpen(true)}
+            className="group/name inline-flex items-center gap-1.5 text-left"
+          >
+            <h3 className="display-serif text-xl text-ink underline decoration-parchment decoration-2 underline-offset-4 transition-colors group-hover/name:text-clay group-hover/name:decoration-ochre sm:text-2xl">
+              {quote.hotelName}
+            </h3>
+            <Images aria-hidden className="size-4 shrink-0 text-ochre" />
+          </button>
           <p className="mt-1 text-xs text-ink-soft">
             {quote.destinationName}
-            {quote.group ? ` · ${quote.group}` : ""}
+            {quote.group ? ` · ${quote.group}` : ""} · Tap the name for photos
           </p>
         </div>
-        {quote.available ? (
-          <div className="flex flex-wrap gap-1.5">
-            {quote.seasons.map((season) => (
-              <span
-                key={season}
-                className="rounded-full border border-parchment bg-cream px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-ink-soft"
-              >
-                {seasonLabels[season] ?? season}
-              </span>
-            ))}
-          </div>
-        ) : null}
+        <div className="flex flex-col items-end gap-2">
+          {quote.available ? (
+            <div className="flex flex-wrap justify-end gap-1.5">
+              {quote.seasons.map((season) => (
+                <span
+                  key={season}
+                  className="rounded-full border border-parchment bg-cream px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-ink-soft"
+                >
+                  {seasonLabels[season] ?? season}
+                </span>
+              ))}
+            </div>
+          ) : null}
+          {quote.websiteUrl ? (
+            <a
+              href={quote.websiteUrl}
+              target="_blank"
+              rel="noopener noreferrer nofollow"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-ochre hover:text-clay"
+            >
+              Official website <ExternalLink aria-hidden className="size-3.5" />
+            </a>
+          ) : null}
+        </div>
       </div>
 
       {quotes.length > 1 ? (
@@ -334,13 +510,13 @@ function HotelCard({
       )}
 
       {quote.available ? (
-        <QuoteBody quote={quote} checkIn={checkIn} checkOut={checkOut} market={market} />
+        <QuoteBody quote={quote} checkIn={checkIn} checkOut={checkOut} market={market} party={party} />
       ) : (
         <div className="px-5 py-4 text-sm text-ink-soft sm:px-6">
           <p>{quote.unavailableReason ?? "No rates available for these dates."}</p>
           <div className="mt-4">
             <ButtonLink
-              href={generalHotelEnquiryHref(quote, checkIn, checkOut, market)}
+              href={generalHotelEnquiryHref(quote, checkIn, checkOut, market, party.adults, party.children)}
               variant="outline"
             >
               Ask us for these dates
@@ -348,6 +524,10 @@ function HotelCard({
           </div>
         </div>
       )}
+
+      {galleryOpen ? (
+        <HotelGallery quote={quote} onClose={() => setGalleryOpen(false)} />
+      ) : null}
     </article>
   );
 }
@@ -357,18 +537,28 @@ function QuoteBody({
   checkIn,
   checkOut,
   market,
+  party,
 }: {
   quote: HotelQuote;
   checkIn: string;
   checkOut: string;
   market: Market;
+  party: { adults: number; children: number; childAges: string };
 }) {
+  const [breakdownOpen, setBreakdownOpen] = useState(false);
   const columns = occupancyColumns.filter((col) =>
     quote.rooms.some((room) => room.occupancies[col.key]),
   );
+  const recommended = recommendedOccupancy(party.adults);
+  const recommendedLabel = occupancyColumns.find((c) => c.key === recommended)?.label ?? "Double";
 
   return (
     <div className="px-5 py-4 sm:px-6 sm:py-5">
+      <p className="mb-3 text-xs font-semibold text-ink-soft">
+        Rates differ by room — <span className="text-clay">select a room type below to check
+        availability</span>. For {party.adults} {party.adults === 1 ? "adult" : "adults"} the{" "}
+        {recommendedLabel.toLowerCase()} rate usually fits best.
+      </p>
       <div className="overflow-x-auto">
         <table className="w-full min-w-[480px] text-sm">
           <thead>
@@ -377,6 +567,9 @@ function QuoteBody({
               {columns.map((col) => (
                 <th key={col.key} className="pb-2 pr-4 font-semibold">
                   {col.label}
+                  {col.key === recommended ? (
+                    <span className="ml-1 text-[10px] font-bold text-ochre">✓ your party</span>
+                  ) : null}
                 </th>
               ))}
             </tr>
@@ -400,9 +593,14 @@ function QuoteBody({
                             checkIn,
                             checkOut,
                             market,
+                            adults: party.adults,
+                            children: party.children,
+                            childAges: party.childAges,
                           })}
                           aria-label={`Select ${quote.hotelName}, ${room.roomTypeName}, ${col.label}, ${money(occ.total, quote.currency)} total`}
-                          className="group/rate block min-w-36 border-l-2 border-transparent px-2 py-3 transition-colors hover:border-ochre hover:bg-ochre/10 focus-visible:border-ochre focus-visible:bg-ochre/10"
+                          className={`group/rate block min-w-36 border-l-2 px-2 py-3 transition-colors hover:border-ochre hover:bg-ochre/10 focus-visible:border-ochre focus-visible:bg-ochre/10 ${
+                            col.key === recommended ? "border-ochre/40 bg-ochre/5" : "border-transparent"
+                          }`}
                         >
                           <span className="block font-semibold text-ink group-hover/rate:text-clay">
                             {money(occ.total, quote.currency)}
@@ -424,6 +622,24 @@ function QuoteBody({
             ))}
           </tbody>
         </table>
+      </div>
+
+      <div className="mt-4">
+        <button
+          type="button"
+          onClick={() => setBreakdownOpen((o) => !o)}
+          aria-expanded={breakdownOpen}
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-ink hover:text-clay"
+        >
+          <ChevronDown
+            aria-hidden
+            className={`size-4 transition-transform ${breakdownOpen ? "rotate-180" : ""}`}
+          />
+          {breakdownOpen ? "Hide cost breakdown" : "Show cost breakdown"}
+        </button>
+        {breakdownOpen ? (
+          <CostBreakdown quote={quote} recommended={recommended} recommendedLabel={recommendedLabel} />
+        ) : null}
       </div>
 
       {quote.familySupplements.length > 0 ? (
@@ -452,7 +668,130 @@ function QuoteBody({
           ))}
         </ul>
       ) : null}
+    </div>
+  );
+}
 
+function CostBreakdown({
+  quote,
+  recommended,
+  recommendedLabel,
+}: {
+  quote: HotelQuote;
+  recommended: OccupancyKey;
+  recommendedLabel: string;
+}) {
+  const rows = quote.rooms
+    .map((room) => ({ room, occ: room.occupancies[recommended] as OccupancyQuote | undefined }))
+    .filter((r): r is { room: RoomTypeQuote; occ: OccupancyQuote } => Boolean(r.occ));
+
+  return (
+    <div className="mt-3 rounded-[3px] border border-parchment bg-cream/60 px-4 py-3 text-xs leading-relaxed text-ink-soft">
+      <p className="font-bold text-ink">
+        {recommendedLabel} rate · {quote.nights} {quote.nights === 1 ? "night" : "nights"}
+      </p>
+      <p className="mt-0.5">
+        Seasons in your dates: {quote.seasons.map((s) => seasonLabels[s] ?? s).join(", ")}. Where a
+        stay spans seasons, each night is priced in its own season and summed.
+      </p>
+      {rows.length > 0 ? (
+        <ul className="mt-2 space-y-1">
+          {rows.map(({ room, occ }) => (
+            <li key={room.roomTypeId} className="flex flex-wrap justify-between gap-2">
+              <span>
+                {room.roomTypeName}: {quote.nights} × {money(occ.perNight, quote.currency)} (avg/night)
+              </span>
+              <span className="font-semibold text-ink">{money(occ.total, quote.currency)}</span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-2">
+          The {recommendedLabel.toLowerCase()} occupancy isn&apos;t sold here — use one of the rates
+          in the table above.
+        </p>
+      )}
+    </div>
+  );
+}
+
+function HotelGallery({ quote, onClose }: { quote: HotelQuote; onClose: () => void }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [onClose]);
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${quote.hotelName} photos`}
+      className="fixed inset-0 z-[60] flex flex-col overflow-y-auto bg-ink/90 p-4 sm:p-8"
+    >
+      <div className="mx-auto w-full max-w-5xl">
+        <div className="flex items-center justify-between gap-4 text-cream">
+          <div>
+            <h3 className="display-serif text-2xl sm:text-3xl">{quote.hotelName}</h3>
+            <p className="mt-1 text-sm text-cream/70">{quote.destinationName}</p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex size-11 items-center justify-center rounded-[3px] border border-cream/40 text-cream hover:bg-cream hover:text-ink"
+          >
+            <X aria-hidden className="size-6" />
+            <span className="sr-only">Close photos</span>
+          </button>
+        </div>
+
+        {quote.images.length > 0 ? (
+          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+            {quote.images.map((src, i) => (
+              <div key={src} className="relative aspect-[4/3] overflow-hidden rounded-[3px] bg-forest-deep">
+                <Image
+                  src={src}
+                  alt={`${quote.hotelName} — photo ${i + 1}`}
+                  fill
+                  sizes="(min-width: 640px) 45vw, 92vw"
+                  className="object-cover"
+                />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="mt-8 rounded-[3px] border border-cream/25 bg-forest-deep/60 px-6 py-14 text-center text-cream">
+            <Images aria-hidden className="mx-auto size-8 text-gold" />
+            <p className="mt-3 font-semibold">Photos coming soon</p>
+            <p className="mx-auto mt-1 max-w-md text-sm text-cream/70">
+              We&apos;re adding a gallery for {quote.hotelName}. In the meantime, a consultant can
+              share current photos and room views with your quote.
+            </p>
+            {quote.websiteUrl ? (
+              <a
+                href={quote.websiteUrl}
+                target="_blank"
+                rel="noopener noreferrer nofollow"
+                className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-gold hover:text-cream"
+              >
+                Visit the official website <ExternalLink aria-hidden className="size-4" />
+              </a>
+            ) : null}
+          </div>
+        )}
+
+        <div className="mt-8 flex justify-center pb-4">
+          <Button type="button" variant="light" onClick={onClose}>
+            Go back
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

@@ -32,6 +32,11 @@ export type DestinationListing = {
   summary: string;
   service: EnquiryService;
   published?: boolean;
+  /** Optional card image (public/ path). Tiles fall back to a colour panel. */
+  image?: string;
+  /** Official tourism site for the country/region, shown as an outbound link. */
+  officialUrl?: string;
+  officialLabel?: string;
 };
 
 export const DESTINATION_EXPERIENCE_LABELS: Record<DestinationExperience, string> = {
@@ -131,6 +136,8 @@ export const travelCategories: TravelCategory[] = [
   },
 ];
 
+const MAGICAL_KENYA = { officialUrl: "https://magicalkenya.com", officialLabel: "Magical Kenya" };
+
 export const destinationListings: DestinationListing[] = [
   {
     name: "Maasai Mara",
@@ -140,6 +147,8 @@ export const destinationListings: DestinationListing[] = [
     summary: "Flagship safari destination with a full guide, map and seasonal planning notes.",
     service: "safari",
     published: true,
+    image: "/images/mara-plains.jpg",
+    ...MAGICAL_KENYA,
   },
   {
     name: "Amboseli",
@@ -148,6 +157,8 @@ export const destinationListings: DestinationListing[] = [
     experience: "safari",
     summary: "Elephant-focused safaris, often paired with the Mara or a coast extension.",
     service: "safari",
+    image: "/images/dest-amboseli.jpg",
+    ...MAGICAL_KENYA,
   },
   {
     name: "Naivasha",
@@ -156,6 +167,8 @@ export const destinationListings: DestinationListing[] = [
     experience: "safari",
     summary: "Rift Valley weekend escapes, boat trips and gentle family breaks.",
     service: "holiday-package",
+    image: "/images/dest-naivasha.jpg",
+    ...MAGICAL_KENYA,
   },
   {
     name: "Samburu",
@@ -164,6 +177,7 @@ export const destinationListings: DestinationListing[] = [
     experience: "safari",
     summary: "Northern Kenya safari enquiries with distinctive landscapes and wildlife.",
     service: "safari",
+    ...MAGICAL_KENYA,
   },
   {
     name: "Diani",
@@ -172,6 +186,8 @@ export const destinationListings: DestinationListing[] = [
     experience: "beach",
     summary: "South coast beach holidays, family stays and safari-and-coast combinations.",
     service: "holiday-package",
+    image: "/images/itinerary-coast.jpg",
+    ...MAGICAL_KENYA,
   },
   {
     name: "Mombasa",
@@ -180,6 +196,8 @@ export const destinationListings: DestinationListing[] = [
     experience: "beach",
     summary: "North coast beach resorts, conferences and shorter domestic breaks.",
     service: "holiday-package",
+    image: "/images/dest-mombasa.jpg",
+    ...MAGICAL_KENYA,
   },
   {
     name: "Watamu",
@@ -188,6 +206,7 @@ export const destinationListings: DestinationListing[] = [
     experience: "beach",
     summary: "Coastal holidays with reef, beach and family-friendly stay requests.",
     service: "holiday-package",
+    ...MAGICAL_KENYA,
   },
   {
     name: "Dubai",
@@ -196,6 +215,8 @@ export const destinationListings: DestinationListing[] = [
     experience: "city",
     summary: "Flights, hotels, transfers, family holidays, shopping and group trips.",
     service: "holiday-package",
+    officialUrl: "https://www.visitdubai.com",
+    officialLabel: "Visit Dubai",
   },
   {
     name: "India",
@@ -204,6 +225,8 @@ export const destinationListings: DestinationListing[] = [
     experience: "city",
     summary: "Flight options from Nairobi to major Indian cities, including family and group travel.",
     service: "flights",
+    officialUrl: "https://www.incredibleindia.gov.in",
+    officialLabel: "Incredible India",
   },
   {
     name: "Zanzibar",
@@ -212,6 +235,8 @@ export const destinationListings: DestinationListing[] = [
     experience: "beach",
     summary: "Beach holiday enquiries with flights, hotels and airport transfers.",
     service: "holiday-package",
+    officialUrl: "https://www.zanzibartourism.go.tz",
+    officialLabel: "Zanzibar Tourism",
   },
   {
     name: "Mauritius",
@@ -220,6 +245,8 @@ export const destinationListings: DestinationListing[] = [
     experience: "beach",
     summary: "Island holiday planning for couples, families and special occasions.",
     service: "holiday-package",
+    officialUrl: "https://www.mauritius.net",
+    officialLabel: "Mauritius Tourism",
   },
   {
     name: "South Africa",
@@ -228,6 +255,8 @@ export const destinationListings: DestinationListing[] = [
     experience: "city",
     summary: "City, coast and safari-style holiday enquiries with flight support.",
     service: "holiday-package",
+    officialUrl: "https://www.southafrica.net",
+    officialLabel: "South African Tourism",
   },
   {
     name: "Turkey",
@@ -236,6 +265,8 @@ export const destinationListings: DestinationListing[] = [
     experience: "city",
     summary: "Holiday enquiries for Istanbul, leisure trips and group travel.",
     service: "holiday-package",
+    officialUrl: "https://www.goturkiye.com",
+    officialLabel: "Go Türkiye",
   },
   {
     name: "Thailand",
@@ -244,6 +275,8 @@ export const destinationListings: DestinationListing[] = [
     experience: "beach",
     summary: "Leisure holiday enquiries with flights, hotels and transfers.",
     service: "holiday-package",
+    officialUrl: "https://www.tourismthailand.org",
+    officialLabel: "Tourism Thailand",
   },
 ];
 

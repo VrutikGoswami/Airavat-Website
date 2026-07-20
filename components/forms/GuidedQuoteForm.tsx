@@ -132,12 +132,26 @@ export function GuidedQuoteForm() {
     if (whoParam && (travellerTypes as readonly string[]).includes(whoParam)) {
       setValue("travellerType", whoParam as QuoteFormValues["travellerType"]);
     }
+    // Party size carried from the rate finder / trip builder.
+    const adultsParam = Number(searchParams.get("adults"));
+    if (Number.isInteger(adultsParam) && adultsParam >= 1 && adultsParam <= 99) {
+      setValue("adults", adultsParam);
+    }
+    const childrenParam = Number(searchParams.get("children"));
+    if (Number.isInteger(childrenParam) && childrenParam >= 0 && childrenParam <= 99) {
+      setValue("children", childrenParam);
+    }
+    const childAgesParam = searchParams.get("childAges");
+    if (childAgesParam) setValue("childAges", childAgesParam);
     // Build notes from any offer / itinerary / free-text style context so none
     // overwrites another. `style` may be a travel-style enum (set it) or a
     // free-text accommodation preference from a destination page (note it).
     const noteLines: string[] = [];
     const offerParam = searchParams.get("offer");
     if (offerParam) noteLines.push(`Offer enquiry: ${offerParam}`);
+    // Free-text summary from the trip builder (multi-stop plan, transport, etc.).
+    const noteParam = searchParams.get("note");
+    if (noteParam) noteLines.push(noteParam);
     const itineraryParam = searchParams.get("itinerary");
     if (itineraryParam) noteLines.push(`Itinerary idea: ${itineraryParam}`);
     const styleParam = searchParams.get("style");

@@ -1,21 +1,22 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { ArrowUpRight, ExternalLink } from "lucide-react";
 import {
   DESTINATION_EXPERIENCE_LABELS,
   enquiryHref,
   type DestinationExperience,
   type DestinationListing,
 } from "@/data/travel-content";
-import { ButtonLink } from "@/components/ui/Button";
 
 const EXPERIENCES: DestinationExperience[] = ["safari", "beach", "city"];
 
 /**
- * Destinations hub: functional experience filter chips over the shared
- * destination listings, grouped by region. Filtering is real (no dead
- * controls), and every card leads to an enquiry rather than a booking.
+ * Destinations hub: a photo-led, explorative grid with working experience
+ * filters. Each tile leads to an enquiry (never a booking) and, where we have
+ * one, links out to the official tourism site for that country or region.
  */
 export function DestinationsExplorer({ listings }: { listings: DestinationListing[] }) {
   const [experience, setExperience] = useState<DestinationExperience | "all">("all");
@@ -59,7 +60,7 @@ export function DestinationsExplorer({ listings }: { listings: DestinationListin
         {experience !== "all" ? ` · ${DESTINATION_EXPERIENCE_LABELS[experience]}` : ""}
       </p>
 
-      <div className="mt-8 grid gap-10 lg:grid-cols-2">
+      <div className="mt-8 space-y-12">
         {(Object.entries(grouped) as [string, DestinationListing[]][])
           .filter(([, items]) => items.length > 0)
           .map(([region, items]) => (
@@ -67,47 +68,78 @@ export function DestinationsExplorer({ listings }: { listings: DestinationListin
               <h2 id={`${region.toLowerCase()}-destinations`} className="display-serif text-3xl">
                 {region}
               </h2>
-              <div className="mt-5 grid gap-4">
+              <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                 {items.map((destination) => (
-                  <article key={destination.slug} className="border border-parchment bg-ivory p-5">
-                    <div className="flex flex-wrap items-start justify-between gap-4">
-                      <div className="max-w-md">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-bold">{destination.name}</h3>
-                          <span className="eyebrow text-[10px] text-stone">
-                            {DESTINATION_EXPERIENCE_LABELS[destination.experience]}
-                          </span>
-                        </div>
-                        <p className="mt-2 text-sm leading-relaxed text-ink-soft">{destination.summary}</p>
-                      </div>
-                      <div className="flex shrink-0 flex-wrap gap-3">
-                        {destination.published ? (
-                          <Link
-                            href={`/destinations/${destination.slug}`}
-                            className="text-sm font-semibold text-ink underline underline-offset-4 hover:text-clay"
-                          >
-                            View guide
-                          </Link>
-                        ) : null}
-                        <ButtonLink
-                          href={enquiryHref({
-                            service: destination.service,
-                            destination: destination.published ? destination.slug : destination.name,
-                            origin: destination.name === "India" ? "Nairobi" : undefined,
-                          })}
-                          variant="ghost"
-                          className="px-0 py-0"
-                        >
-                          Plan this trip
-                        </ButtonLink>
-                      </div>
-                    </div>
-                  </article>
+                  <DestinationTile key={destination.slug} destination={destination} />
                 ))}
               </div>
             </section>
           ))}
       </div>
     </div>
+  );
+}
+
+function DestinationTile({ destination }: { destination: DestinationListing }) {
+  const planHref = enquiryHref({
+    service: destination.service,
+    destination: destination.published ? destination.slug : destination.name,
+    origin: destination.name === "India" ? "Nairobi" : undefined,
+  });
+
+  return (
+    <article className="group flex flex-col overflow-hidden rounded-[3px] border border-parchment bg-ivory">
+      <div className="relative aspect-[4/3] overflow-hidden bg-forest-deep">
+        {destination.image ? (
+          <Image
+            src={destination.image}
+            alt={destination.name}
+            fill
+            sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 92vw"
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+        ) : (
+          <div aria-hidden className="absolute inset-0 bg-gradient-to-br from-forest to-forest-deep" />
+        )}
+        <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-ink/75 via-ink/10 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 p-4">
+          <h3 className="display-serif text-2xl text-cream text-balance">{destination.name}</h3>
+          <span className="rounded-full bg-cream/90 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-ink">
+            {DESTINATION_EXPERIENCE_LABELS[destination.experience]}
+          </span>
+        </div>
+      </div>
+
+      <div className="flex flex-1 flex-col p-5">
+        <p className="flex-1 text-sm leading-relaxed text-ink-soft">{destination.summary}</p>
+        <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
+          <Link
+            href={planHref}
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-ochre hover:text-clay"
+          >
+            Plan this trip <ArrowUpRight aria-hidden className="size-4" />
+          </Link>
+          {destination.published ? (
+            <Link
+              href={`/destinations/${destination.slug}`}
+              className="text-sm font-semibold text-ink underline underline-offset-4 hover:text-clay"
+            >
+              View guide
+            </Link>
+          ) : null}
+          {destination.officialUrl ? (
+            <a
+              href={destination.officialUrl}
+              target="_blank"
+              rel="noopener noreferrer nofollow"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-stone hover:text-clay"
+            >
+              {destination.officialLabel ?? "Tourism site"}
+              <ExternalLink aria-hidden className="size-3.5" />
+            </a>
+          ) : null}
+        </div>
+      </div>
+    </article>
   );
 }

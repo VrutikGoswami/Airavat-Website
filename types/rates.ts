@@ -117,6 +117,10 @@ export type HotelRateSheet = {
   group?: string;
   destinationSlug: string;
   destinationName: string;
+  /** Official hotel website, shown as an outbound link on the rate card. */
+  websiteUrl?: string;
+  /** Gallery image paths (public/ or absolute). Powers the name → lightbox. */
+  images?: string[];
   currency: "KES" | "USD";
   market: RateMarket;
   basis: RateBasis;

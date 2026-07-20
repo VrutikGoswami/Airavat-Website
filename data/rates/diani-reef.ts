@@ -59,6 +59,7 @@ function sheet(
   return {
     hotelSlug: `diani-reef-${suffix}`,
     hotelName: "Diani Reef Beach Resort & Spa",
+    websiteUrl: "https://dianireef.com",
     destinationSlug: "diani",
     destinationName: "Diani Beach",
     currency,

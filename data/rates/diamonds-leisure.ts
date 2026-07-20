@@ -56,6 +56,7 @@ function residentPeriods(seasons: ResidentSeason[]): RatePeriod[] {
 const residentShared = {
   hotelName: "Diamonds Leisure Beach & Golf Resort",
   group: "Planhotel / Diamonds Resorts",
+  websiteUrl: "https://www.diamondsresorts.com",
   destinationSlug: "diani",
   destinationName: "Diani Beach",
   currency: "KES",
@@ -143,6 +144,7 @@ export const diamondsLeisureRateSheets: HotelRateSheet[] = [
     hotelSlug: "diamonds-leisure-nr",
     hotelName: "Diamonds Leisure Beach & Golf Resort",
     group: "Planhotel / Diamonds Resorts",
+    websiteUrl: "https://www.diamondsresorts.com",
     destinationSlug: "diani",
     destinationName: "Diani Beach",
     currency: "USD",

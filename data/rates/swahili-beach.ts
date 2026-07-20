@@ -59,6 +59,7 @@ function sheet(
   return {
     hotelSlug: `swahili-beach-${suffix}`,
     hotelName: "Swahili Beach Resort",
+    websiteUrl: "https://swahilibeach.com",
     destinationSlug: "diani",
     destinationName: "Diani Beach",
     currency,

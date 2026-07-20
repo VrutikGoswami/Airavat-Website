@@ -8,7 +8,7 @@ import { enquiryHref, popularRoutes, travelCategories } from "@/data/travel-cont
 import { ButtonLink } from "@/components/ui/Button";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { WhatsAppButton } from "@/components/ui/WhatsAppButton";
-import { RateFinder } from "@/components/rates/RateFinder";
+import { QuickSearch } from "@/components/home/QuickSearch";
 import { CurrentOffers } from "@/components/editorial/CurrentOffers";
 import { EditorialCTA } from "@/components/editorial/EditorialCTA";
 import { ProcessTimeline } from "@/components/editorial/ProcessTimeline";
@@ -73,22 +73,22 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ------------------------------------------------ hotel rate finder */}
-      <section id="hotel-rates" className="scroll-mt-20 bg-sand/60 lg:scroll-mt-24">
+      {/* --------------------------------------------------- quick search */}
+      <section id="quick-search" className="scroll-mt-20 bg-sand/60 lg:scroll-mt-24">
         <div className="container-site py-14 sm:py-20">
           <div className="max-w-3xl">
-            <p className="eyebrow text-ochre">Hotel rate finder</p>
+            <p className="eyebrow text-ochre">The fastest way to book your trip</p>
             <h2 className="display-serif mt-2 text-3xl sm:text-4xl lg:text-5xl">
-              Get hotel rates, quickly.
+              Hotels, flights and packages — start in seconds.
             </h2>
             <p className="mt-4 max-w-2xl text-sm leading-relaxed text-ink-soft sm:text-base">
-              Choose your destination and dates to compare the hotel and camp rates we currently
-              hold. Select any price to send that exact stay to our team for availability
-              confirmation.
+              Search live hotel rates, start a two-minute flight enquiry, or build your own trip.
+              You always get a clear quotation before anything is confirmed — and we&apos;re the
+              fastest team you&apos;ll deal with.
             </p>
           </div>
-          <div className="mt-8 max-w-6xl">
-            <RateFinder destinations={hotelRateDestinations} />
+          <div className="mt-8 max-w-5xl">
+            <QuickSearch destinations={hotelRateDestinations} />
           </div>
         </div>
       </section>
