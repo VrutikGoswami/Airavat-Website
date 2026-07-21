@@ -8,6 +8,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/Button";
 import { WhatsAppButton } from "@/components/ui/WhatsAppButton";
+import { AirportAutocomplete } from "@/components/ui/AirportAutocomplete";
 import {
   CheckboxField,
   OptionTile,
@@ -96,6 +97,9 @@ export function GuidedQuoteForm() {
   const service = watch("service");
   const flexibleDates = watch("flexibleDates");
   const children = watch("children");
+  const destinationValue = watch("destination");
+  const departureCityValue = watch("departureCity");
+  const isFlights = service === "flights";
   const step = QUOTE_STEPS[stepIndex];
   const selectedRateFromUrl = searchParams.get("rateSelection") === "1";
 
@@ -440,13 +444,24 @@ export function GuidedQuoteForm() {
                 />
               ))}
             </div>
-            <TextField
-              label="Where would you like to go?"
-              hint="A country, city or park is ideal — “not sure yet” is completely fine."
-              placeholder="e.g. Maasai Mara, Dubai, not sure yet"
-              {...register("destination")}
-              error={errors.destination?.message}
-            />
+            {isFlights ? (
+              <AirportAutocomplete
+                label="Where would you like to go?"
+                hint="Type a city and pick the airport — e.g. Dubai (DXB)."
+                placeholder="e.g. Dubai, Mumbai, London"
+                value={destinationValue ?? ""}
+                onChange={(v) => setValue("destination", v, { shouldValidate: true })}
+                error={errors.destination?.message}
+              />
+            ) : (
+              <TextField
+                label="Where would you like to go?"
+                hint="A country, city or park is ideal — “not sure yet” is completely fine."
+                placeholder="e.g. Maasai Mara, Dubai, not sure yet"
+                {...register("destination")}
+                error={errors.destination?.message}
+              />
+            )}
             <button
               type="button"
               className="text-sm font-semibold text-ochre underline underline-offset-4 hover:text-clay"
@@ -458,11 +473,13 @@ export function GuidedQuoteForm() {
             >
               I&apos;m not sure yet
             </button>
-            {service === "flights" ? (
-              <TextField
+            {isFlights ? (
+              <AirportAutocomplete
                 label="Flying from"
-                placeholder="e.g. Nairobi"
-                {...register("departureCity")}
+                hint="Type a city and pick the airport — e.g. Nairobi (NBO)."
+                placeholder="e.g. Nairobi, Mombasa"
+                value={departureCityValue ?? ""}
+                onChange={(v) => setValue("departureCity", v, { shouldValidate: true })}
                 error={errors.departureCity?.message}
               />
             ) : (

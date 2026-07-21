@@ -8,6 +8,7 @@ import { BedDouble, Plane, Sparkles } from "lucide-react";
 import type { RateDestinationOption } from "@/data/rates";
 import { Button } from "@/components/ui/Button";
 import { SelectField, TextField } from "@/components/forms/fields";
+import { AirportAutocomplete } from "@/components/ui/AirportAutocomplete";
 
 type Tab = "hotels" | "flights" | "packages";
 
@@ -128,7 +129,7 @@ function HotelsTab({ destinations }: { destinations: RateDestinationOption[] }) 
 
 function FlightsTab() {
   const router = useRouter();
-  const [origin, setOrigin] = useState("Nairobi");
+  const [origin, setOrigin] = useState("Nairobi (NBO)");
   const [destination, setDestination] = useState("");
   const [checkIn, setCheckIn] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -146,12 +147,12 @@ function FlightsTab() {
 
   return (
     <form onSubmit={onSubmit} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:items-end">
-      <TextField label="Flying from" value={origin} onChange={(e) => setOrigin(e.target.value)} />
-      <TextField
+      <AirportAutocomplete label="Flying from" value={origin} onChange={setOrigin} />
+      <AirportAutocomplete
         label="Flying to"
-        placeholder="City or country"
+        placeholder="Type a city, e.g. Dubai"
         value={destination}
-        onChange={(e) => setDestination(e.target.value)}
+        onChange={setDestination}
       />
       <TextField
         label="Departure (approx.)"
