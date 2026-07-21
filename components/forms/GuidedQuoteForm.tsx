@@ -25,7 +25,6 @@ import {
   SERVICE_LABELS,
   STYLE_LABELS,
   budgetBands,
-  enquiryServices,
   quoteDefaults,
   quoteSchema,
   travelStyles,
@@ -35,6 +34,25 @@ import {
 import { destinations } from "@/data/destinations";
 
 const DRAFT_KEY = "travel-enquiry-draft-v1";
+
+/**
+ * Services offered in the quote flow. Safaris and transport fold into a
+ * complete holiday package; corporate/group enquiries route to "not sure"
+ * for a consultant to shape. Keeps the flow to three clear paths + a fallback.
+ */
+const VISIBLE_SERVICES: QuoteFormValues["service"][] = [
+  "flights",
+  "hotels",
+  "holiday-package",
+  "not-sure",
+];
+
+/** Map a legacy/removed service (from an old link) to the closest visible one. */
+function toVisibleService(s: string): QuoteFormValues["service"] {
+  if ((VISIBLE_SERVICES as string[]).includes(s)) return s as QuoteFormValues["service"];
+  if (s === "safari" || s === "transport") return "holiday-package";
+  return "not-sure";
+}
 
 type SubmitState =
   | { status: "idle" | "submitting" }
@@ -114,8 +132,8 @@ export function GuidedQuoteForm() {
       }
     }
     const serviceParam = searchParams.get("service");
-    if (serviceParam && (enquiryServices as readonly string[]).includes(serviceParam)) {
-      setValue("service", serviceParam as QuoteFormValues["service"]);
+    if (serviceParam) {
+      setValue("service", toVisibleService(serviceParam));
     }
     const destinationParam = searchParams.get("destination");
     if (destinationParam) {
@@ -430,7 +448,7 @@ export function GuidedQuoteForm() {
         {step.id === "trip" ? (
           <>
             <div role="radiogroup" aria-label="Type of help" className="grid gap-3 sm:grid-cols-2">
-              {enquiryServices.map((s) => (
+              {VISIBLE_SERVICES.map((s) => (
                 <OptionTile
                   key={s}
                   selected={service === s}
@@ -566,7 +584,7 @@ export function GuidedQuoteForm() {
                   </option>
                 ))}
               </SelectField>
-              {(service === "hotels" || service === "safari" || service === "holiday-package") ? (
+              {(service === "hotels" || service === "holiday-package") ? (
                 <SelectField
                   label="Resident status"
                   {...register("residency")}
@@ -674,7 +692,7 @@ export function GuidedQuoteForm() {
               </fieldset>
             ) : null}
 
-            {service === "safari" || service === "holiday-package" || service === "transport" ? (
+            {service === "holiday-package" ? (
               <fieldset className="space-y-5 border-t border-parchment pt-5">
                 <legend className="eyebrow pt-5 text-ochre">Trip preferences</legend>
                 <div className="grid gap-5 sm:grid-cols-3">
@@ -727,56 +745,6 @@ export function GuidedQuoteForm() {
                   placeholder="Honeymoon, birthday, anniversary…"
                   {...register("specialOccasion")}
                   error={errors.specialOccasion?.message}
-                />
-              </fieldset>
-            ) : null}
-
-            {service === "corporate" || service === "group" ? (
-              <fieldset className="space-y-5 border-t border-parchment pt-5">
-                <legend className="eyebrow pt-5 text-ochre">
-                  {service === "corporate" ? "Organisation details" : "Group details"}
-                </legend>
-                <div className="grid gap-5 sm:grid-cols-2">
-                  <TextField
-                    label="Organisation name"
-                    required={false}
-                    {...register("organisationName")}
-                    error={errors.organisationName?.message}
-                  />
-                  <TextField
-                    label="Approximate group size"
-                    placeholder="e.g. 25 travellers"
-                    {...register("groupSize")}
-                    error={errors.groupSize?.message}
-                  />
-                </div>
-                <TextField
-                  label="Purpose of travel"
-                  required={false}
-                  placeholder="Conference, school trip, retreat, pilgrimage…"
-                  {...register("travelPurpose")}
-                  error={errors.travelPurpose?.message}
-                />
-                <TextField
-                  label="Departure points"
-                  required={false}
-                  hint="Travelling from more than one city? List them here."
-                  {...register("departurePoints")}
-                  error={errors.departurePoints?.message}
-                />
-                {service === "corporate" ? (
-                  <TextAreaField
-                    label="Billing requirements"
-                    placeholder="Invoicing needs, PO numbers, approval steps…"
-                    {...register("billingRequirements")}
-                    error={errors.billingRequirements?.message}
-                  />
-                ) : null}
-                <TextAreaField
-                  label="Coordination requirements"
-                  placeholder="Rooming lists, meal requirements, equipment…"
-                  {...register("coordinationNotes")}
-                  error={errors.coordinationNotes?.message}
                 />
               </fieldset>
             ) : null}
