@@ -29,6 +29,7 @@ function readInitial(
 
   const adults = Number(get("adults"));
   const children = Number(get("children"));
+  const rooms = Number(get("rooms"));
   const market = get("market");
   return {
     destination,
@@ -36,6 +37,7 @@ function readInitial(
     checkOut,
     adults: Number.isFinite(adults) && adults > 0 ? adults : undefined,
     children: Number.isFinite(children) && children >= 0 ? children : undefined,
+    rooms: Number.isFinite(rooms) && rooms > 0 ? rooms : undefined,
     market: market === "non-resident" ? "non-resident" : "east-african-resident",
   };
 }

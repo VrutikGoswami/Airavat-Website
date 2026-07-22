@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import type { FormEvent } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { SelectField, TextField } from "@/components/forms/fields";
@@ -36,7 +35,30 @@ const budgetOptions = [
   { value: "not-sure", label: "Not sure yet" },
 ] as const;
 
-export function TripBuilder({ initialDestination }: { initialDestination?: string }) {
+export type TripPlan = {
+  stops: string[];
+  startDate: string;
+  nights: string;
+  flexible: boolean;
+  adults: number;
+  children: number;
+  childAges: string;
+  transport: (typeof transportOptions)[number]["value"];
+  style: (typeof styleOptions)[number]["value"];
+  budget: (typeof budgetOptions)[number]["value"];
+  activities: string;
+  note: string;
+};
+
+export function TripBuilder({
+  initialDestination,
+  onComplete,
+  submitLabel = "Review and send my trip",
+}: {
+  initialDestination?: string;
+  onComplete?: (plan: TripPlan) => void;
+  submitLabel?: string;
+}) {
   const router = useRouter();
   const [stops, setStops] = useState<string[]>([initialDestination ?? "", ""]);
   const [startDate, setStartDate] = useState("");
@@ -61,8 +83,7 @@ export function TripBuilder({ initialDestination }: { initialDestination?: strin
     setStops((prev) => prev.filter((_, i) => i !== index));
   }
 
-  function onSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  function onSubmit() {
     const cleanStops = stops.map((s) => s.trim()).filter(Boolean);
     if (cleanStops.length === 0) {
       setError("Add at least one place you'd like to go.");
@@ -78,6 +99,26 @@ export function TripBuilder({ initialDestination }: { initialDestination?: strin
       activities.trim() ? `Interests: ${activities.trim()}` : null,
     ].filter(Boolean);
 
+    const note = noteParts.join(" · ");
+    const plan: TripPlan = {
+      stops: cleanStops,
+      startDate,
+      nights,
+      flexible,
+      adults,
+      children,
+      childAges,
+      transport,
+      style,
+      budget,
+      activities,
+      note,
+    };
+    if (onComplete) {
+      onComplete(plan);
+      return;
+    }
+
     const params = new URLSearchParams({
       service: "holiday-package",
       destination: cleanStops[0],
@@ -85,7 +126,7 @@ export function TripBuilder({ initialDestination }: { initialDestination?: strin
       children: String(children),
       style,
       budget,
-      note: noteParts.join(" · "),
+      note,
     });
     if (childAges.trim()) params.set("childAges", childAges.trim());
     if (startDate) params.set("checkIn", startDate);
@@ -94,7 +135,7 @@ export function TripBuilder({ initialDestination }: { initialDestination?: strin
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-8">
+    <div className="space-y-8">
       <fieldset className="space-y-3">
         <legend className="text-sm font-bold text-ink">Where do you want to go?</legend>
         <p className="text-xs text-ink-soft">Add each stop in order. One place is fine; add more for a multi-stop trip.</p>
@@ -240,14 +281,14 @@ export function TripBuilder({ initialDestination }: { initialDestination?: strin
       ) : null}
 
       <div className="flex flex-wrap items-center gap-4">
-        <Button type="submit" size="lg">
-          Review and send my trip
+        <Button type="button" size="lg" onClick={onSubmit}>
+          {submitLabel}
         </Button>
         <p className="text-xs text-ink-soft">
           You&apos;ll see everything to confirm on the next step — this creates an enquiry, not a
           booking.
         </p>
       </div>
-    </form>
+    </div>
   );
 }

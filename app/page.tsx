@@ -87,7 +87,7 @@ export default async function HomePage() {
               fastest team you&apos;ll deal with.
             </p>
           </div>
-          <div className="mt-8 max-w-5xl">
+          <div className="mt-8 max-w-7xl">
             <QuickSearch destinations={hotelRateDestinations} />
           </div>
         </div>

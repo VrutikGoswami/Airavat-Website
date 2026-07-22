@@ -2,24 +2,22 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
-import type { FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowUpRight, ChevronDown, ExternalLink, Images, X } from "lucide-react";
 import type { RateDestinationOption } from "@/types/rates";
 import type { HotelQuote, OccupancyQuote, RoomTypeQuote } from "@/lib/rates";
 import type { OccupancyKey } from "@/types/rates";
 import { Button, ButtonLink } from "@/components/ui/Button";
-import { SelectField, TextField } from "@/components/forms/fields";
+import { HotelSearchBar } from "@/components/search/HotelSearchBar";
 
 type Market = "east-african-resident" | "non-resident";
-type StaysIn = "kenya" | "international";
-
 export type RateFinderInitial = {
   destination?: string;
   checkIn?: string;
   checkOut?: string;
   adults?: number;
   children?: number;
+  rooms?: number;
   market?: Market;
 };
 
@@ -84,14 +82,6 @@ function formatDate(iso: string): string {
   });
 }
 
-function nightsBetween(checkIn: string, checkOut: string): number {
-  if (!checkIn || !checkOut) return 0;
-  const start = new Date(`${checkIn}T00:00:00Z`).getTime();
-  const end = new Date(`${checkOut}T00:00:00Z`).getTime();
-  if (Number.isNaN(start) || Number.isNaN(end) || end <= start) return 0;
-  return Math.round((end - start) / 86_400_000);
-}
-
 function rateEnquiryHref(args: {
   quote: HotelQuote;
   room: RoomTypeQuote;
@@ -103,6 +93,7 @@ function rateEnquiryHref(args: {
   market: Market;
   adults: number;
   children: number;
+  rooms: number;
   childAges: string;
 }): string {
   const params = new URLSearchParams({
@@ -121,6 +112,7 @@ function rateEnquiryHref(args: {
     perNight: String(args.perNight),
     adults: String(args.adults),
     children: String(args.children),
+    rooms: String(args.rooms),
   });
   if (args.childAges.trim()) params.set("childAges", args.childAges.trim());
   return `/request-a-quote?${params.toString()}`;
@@ -133,6 +125,7 @@ function generalHotelEnquiryHref(
   market: Market,
   adults: number,
   children: number,
+  rooms: number,
 ): string {
   const params = new URLSearchParams({
     service: "hotels",
@@ -143,6 +136,7 @@ function generalHotelEnquiryHref(
     hotel: quote.hotelName,
     adults: String(adults),
     children: String(children),
+    rooms: String(rooms),
   });
   return `/request-a-quote?${params.toString()}`;
 }
@@ -154,9 +148,8 @@ export function RateFinder({
   destinations: RateDestinationOption[];
   initial?: RateFinderInitial;
 }) {
-  const [staysIn, setStaysIn] = useState<StaysIn>("kenya");
   const [destination, setDestination] = useState(
-    initial?.destination ?? destinations[0]?.slug ?? "",
+    initial?.destination ?? "",
   );
   const [market, setMarket] = useState<Market>(initial?.market ?? "east-african-resident");
   const [checkIn, setCheckIn] = useState(initial?.checkIn ?? "");
@@ -164,14 +157,14 @@ export function RateFinder({
   const [adults, setAdults] = useState(initial?.adults ?? 2);
   const [children, setChildren] = useState(initial?.children ?? 0);
   const [childAges, setChildAges] = useState("");
+  const [rooms, setRooms] = useState(initial?.rooms ?? 1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<QuoteResponse | null>(null);
   // The party the results were fetched for, so cards stay consistent if the
   // guest inputs change before the next search.
-  const [party, setParty] = useState({ adults: 2, children: 0, childAges: "" });
-
-  const nights = nightsBetween(checkIn, checkOut);
+  const [party, setParty] = useState({ adults: 2, children: 0, rooms: 1, childAges: "" });
+  const resultsRef = useRef<HTMLDivElement>(null);
 
   const runSearch = useCallback(
     async (query: { destination: string; checkIn: string; checkOut: string; market: Market }) => {
@@ -199,15 +192,20 @@ export function RateFinder({
     [],
   );
 
-  function onSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  function onSubmit() {
     if (!destination || !checkIn || !checkOut) {
       setError("Choose a destination, check-in and check-out date.");
       return;
     }
-    setParty({ adults, children, childAges });
+    setParty({ adults, children, rooms, childAges });
     void runSearch({ destination, checkIn, checkOut, market });
   }
+
+  useEffect(() => {
+    if (result) {
+      requestAnimationFrame(() => resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+    }
+  }, [result]);
 
   // Auto-run once when the finder is opened pre-seeded from a search widget.
   useEffect(() => {
@@ -215,6 +213,7 @@ export function RateFinder({
       setParty({
         adults: initial.adults ?? 2,
         children: initial.children ?? 0,
+        rooms: initial.rooms ?? 1,
         childAges: "",
       });
       void runSearch({
@@ -261,153 +260,38 @@ export function RateFinder({
 
   return (
     <div>
-      <form
+      <HotelSearchBar
+        destinations={destinations}
+        value={{ destination, checkIn, checkOut, adults, children, rooms, market }}
+        onChange={(next) => {
+          setDestination(next.destination);
+          setCheckIn(next.checkIn);
+          setCheckOut(next.checkOut);
+          setAdults(next.adults);
+          setChildren(next.children);
+          setRooms(next.rooms);
+          setMarket(next.market);
+        }}
         onSubmit={onSubmit}
-        className="grid gap-4 rounded-[3px] border border-parchment bg-ivory/60 p-5 sm:grid-cols-2 sm:items-end sm:gap-5 sm:p-6 lg:grid-cols-4"
-      >
-        <fieldset className="sm:col-span-2 lg:col-span-4">
-          <legend className="mb-1.5 block text-sm font-bold">Where are you staying?</legend>
-          <div className="flex flex-wrap gap-2" role="radiogroup">
-            {(
-              [
-                ["kenya", "Kenya", false],
-                ["international", "International (coming soon)", true],
-              ] as Array<[StaysIn, string, boolean]>
-            ).map(([value, label, disabled]) => (
-              <button
-                key={value}
-                type="button"
-                role="radio"
-                aria-checked={staysIn === value}
-                disabled={disabled}
-                onClick={() => setStaysIn(value)}
-                className={`rounded-[3px] border px-4 py-2 text-sm font-semibold transition-colors ${
-                  staysIn === value
-                    ? "border-ochre bg-ochre/10 text-clay"
-                    : "border-parchment bg-ivory text-ink hover:border-stone"
-                } disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-parchment`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-          {staysIn === "international" ? (
-            <p className="mt-2 text-xs text-ink-soft">
-              International hotel rates aren&apos;t online yet — tell us your trip and a consultant
-              sends options.
-            </p>
-          ) : null}
-        </fieldset>
-
-        <SelectField
-          label="Destination"
-          value={destination}
-          onChange={(e) => setDestination(e.target.value)}
-        >
-          {destinations.map((d) => (
-            <option key={d.slug} value={d.slug}>
-              {d.name} ({d.hotelCount} {d.hotelCount === 1 ? "property" : "properties"})
-            </option>
-          ))}
-        </SelectField>
-        <TextField
-          label="Check-in"
-          type="date"
-          value={checkIn}
-          onChange={(e) => setCheckIn(e.target.value)}
-        />
-        <TextField
-          label="Check-out"
-          type="date"
-          value={checkOut}
-          min={checkIn || undefined}
-          onChange={(e) => setCheckOut(e.target.value)}
-        />
-        <div className="rounded-[3px] border border-parchment bg-ivory px-3.5 py-2.5 text-sm">
-          <span className="block text-xs font-bold text-stone">Length of stay</span>
-          <span className="mt-0.5 block font-semibold text-ink">
-            {nights > 0 ? `${nights} ${nights === 1 ? "night" : "nights"}` : "Pick your dates"}
-          </span>
-        </div>
-
-        <TextField
-          label="Adults"
-          type="number"
-          min={1}
-          max={20}
-          value={adults}
-          onChange={(e) => setAdults(Math.max(1, Number(e.target.value) || 1))}
-        />
-        <TextField
-          label="Children"
-          type="number"
-          min={0}
-          max={20}
-          required={false}
-          value={children}
-          onChange={(e) => setChildren(Math.max(0, Number(e.target.value) || 0))}
-        />
-        {children > 0 ? (
-          <TextField
-            label="Children's ages"
-            hint="Helps price child rates correctly"
-            required={false}
-            placeholder="e.g. 4, 9"
-            value={childAges}
-            onChange={(e) => setChildAges(e.target.value)}
-          />
-        ) : (
-          <div className="hidden lg:block" aria-hidden />
-        )}
-
-        <fieldset className="sm:col-span-2 lg:col-span-2">
-          <legend className="mb-1.5 block text-sm font-bold">Rates for</legend>
-          <div className="flex flex-wrap gap-2" role="radiogroup">
-            {(
-              [
-                ["east-african-resident", "East African residents"],
-                ["non-resident", "Overseas visitors"],
-              ] as Array<[Market, string]>
-            ).map(([value, label]) => (
-              <button
-                key={value}
-                type="button"
-                role="radio"
-                aria-checked={market === value}
-                onClick={() => setMarket(value)}
-                className={`rounded-[3px] border px-4 py-2 text-sm font-semibold transition-colors ${
-                  market === value
-                    ? "border-ochre bg-ochre/10 text-clay"
-                    : "border-parchment bg-ivory text-ink hover:border-stone"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </fieldset>
-
-        <div className="sm:col-span-2 lg:col-span-2 lg:justify-self-end">
-          <Button type="submit" disabled={loading} className="w-full sm:w-auto">
-            {loading ? "Checking rates…" : "Show rates"}
-          </Button>
-        </div>
-      </form>
-
-      {error ? (
-        <p className="mt-5 text-sm font-semibold text-clay" role="alert">
-          {error}
-        </p>
+        loading={loading}
+        error={error}
+      />
+      {children > 0 ? (
+        <label className="mt-3 block max-w-sm text-xs font-semibold text-ink-soft">
+          Children&apos;s ages
+          <input value={childAges} onChange={(event) => setChildAges(event.target.value)} placeholder="e.g. 4, 9" className="ml-2 border border-parchment bg-white px-2.5 py-2 text-sm text-ink outline-none focus-visible:border-ochre" />
+        </label>
       ) : null}
 
       {result ? (
-        <div className="mt-10 space-y-8">
+        <div ref={resultsRef} className="mt-10 scroll-mt-24 space-y-8">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <p className="text-sm text-ink-soft">
               {formatDate(result.checkIn)} – {formatDate(result.checkOut)} ·{" "}
               {result.nights} {result.nights === 1 ? "night" : "nights"} ·{" "}
               {party.adults} {party.adults === 1 ? "adult" : "adults"}
               {party.children > 0 ? `, ${party.children} ${party.children === 1 ? "child" : "children"}` : ""}{" "}
+              · {party.rooms} {party.rooms === 1 ? "room" : "rooms"}{" "}
               · {hotelGroups.length} {hotelGroups.length === 1 ? "property" : "properties"}
             </p>
             <p className="text-xs font-semibold text-ochre">
@@ -449,7 +333,7 @@ function HotelCard({
   checkIn: string;
   checkOut: string;
   market: Market;
-  party: { adults: number; children: number; childAges: string };
+  party: { adults: number; children: number; rooms: number; childAges: string };
 }) {
   const [selectedSlug, setSelectedSlug] = useState(quotes[0].hotelSlug);
   const [galleryOpen, setGalleryOpen] = useState(false);
@@ -532,7 +416,7 @@ function HotelCard({
           <p>{quote.unavailableReason ?? "No rates available for these dates."}</p>
           <div className="mt-4">
             <ButtonLink
-              href={generalHotelEnquiryHref(quote, checkIn, checkOut, market, party.adults, party.children)}
+              href={generalHotelEnquiryHref(quote, checkIn, checkOut, market, party.adults, party.children, party.rooms)}
               variant="outline"
             >
               Ask us for these dates
@@ -559,7 +443,7 @@ function QuoteBody({
   checkIn: string;
   checkOut: string;
   market: Market;
-  party: { adults: number; children: number; childAges: string };
+  party: { adults: number; children: number; rooms: number; childAges: string };
 }) {
   const [breakdownOpen, setBreakdownOpen] = useState(false);
   const columns = occupancyColumns.filter((col) =>
@@ -611,6 +495,7 @@ function QuoteBody({
                             market,
                             adults: party.adults,
                             children: party.children,
+                            rooms: party.rooms,
                             childAges: party.childAges,
                           })}
                           aria-label={`Select ${quote.hotelName}, ${room.roomTypeName}, ${col.label}, ${money(occ.total, quote.currency)} total`}
@@ -625,7 +510,7 @@ function QuoteBody({
                             {money(occ.perNight, quote.currency)}/night
                           </span>
                           <span className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-ochre">
-                            Select rate <ArrowUpRight aria-hidden className="size-3.5" />
+                            Get availability <ArrowUpRight aria-hidden className="size-3.5" />
                           </span>
                         </Link>
                       ) : (

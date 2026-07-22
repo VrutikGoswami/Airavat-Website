@@ -8,7 +8,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/Button";
 import { WhatsAppButton } from "@/components/ui/WhatsAppButton";
-import { AirportAutocomplete } from "@/components/ui/AirportAutocomplete";
+import { FlightFinder, type FlightSearchValues } from "@/components/flights/FlightFinder";
+import { HotelSearchBar, type HotelSearchValues } from "@/components/search/HotelSearchBar";
+import { TripBuilder, type TripPlan } from "@/components/packages/TripBuilder";
+import type { RateDestinationOption } from "@/types/rates";
 import {
   CheckboxField,
   OptionTile,
@@ -23,7 +26,6 @@ import {
   QUOTE_STEPS,
   QUOTE_STEP_FIELDS,
   SERVICE_LABELS,
-  STYLE_LABELS,
   budgetBands,
   quoteDefaults,
   quoteSchema,
@@ -89,7 +91,7 @@ function sourceContext(searchParams: URLSearchParams) {
  * allows "not sure", progress is saved locally, and submission clearly
  * creates an enquiry — never a booking.
  */
-export function GuidedQuoteForm() {
+export function GuidedQuoteForm({ hotelDestinations }: { hotelDestinations: RateDestinationOption[] }) {
   const searchParams = useSearchParams();
   const [stepIndex, setStepIndex] = useState(0);
   const [submitState, setSubmitState] = useState<SubmitState>({ status: "idle" });
@@ -117,7 +119,14 @@ export function GuidedQuoteForm() {
   const children = watch("children");
   const destinationValue = watch("destination");
   const departureCityValue = watch("departureCity");
-  const isFlights = service === "flights";
+  const departureDateValue = watch("departureDate");
+  const returnDateValue = watch("returnDate");
+  const tripTypeValue = watch("tripType");
+  const cabinClassValue = watch("cabinClass");
+  const checkedBaggageValue = watch("checkedBaggage");
+  const adultsValue = watch("adults");
+  const roomsValue = watch("rooms");
+  const residencyValue = watch("residency");
   const step = QUOTE_STEPS[stepIndex];
   const selectedRateFromUrl = searchParams.get("rateSelection") === "1";
 
@@ -139,6 +148,8 @@ export function GuidedQuoteForm() {
     if (destinationParam) {
       if (destinationParam === "international") {
         setValue("destination", "Somewhere international");
+      } else if (serviceParam === "hotels" && hotelDestinations.some((destination) => destination.slug === destinationParam)) {
+        setValue("destination", destinationParam);
       } else {
         const known = destinations.find((d) => d.slug === destinationParam);
         setValue("destination", known ? `${known.name}, ${known.country}` : destinationParam);
@@ -162,6 +173,10 @@ export function GuidedQuoteForm() {
     const childrenParam = Number(searchParams.get("children"));
     if (Number.isInteger(childrenParam) && childrenParam >= 0 && childrenParam <= 99) {
       setValue("children", childrenParam);
+    }
+    const roomsParam = Number(searchParams.get("rooms"));
+    if (Number.isInteger(roomsParam) && roomsParam >= 1 && roomsParam <= 50) {
+      setValue("rooms", roomsParam);
     }
     const childAgesParam = searchParams.get("childAges");
     if (childAgesParam) setValue("childAges", childAgesParam);
@@ -194,6 +209,18 @@ export function GuidedQuoteForm() {
       setValue("returnDate", checkOutParam);
     }
 
+    const tripTypeParam = searchParams.get("tripType");
+    if (tripTypeParam === "one-way" || tripTypeParam === "return") setValue("tripType", tripTypeParam);
+    const cabinParam = searchParams.get("cabinClass");
+    if (["economy", "premium-economy", "business", "first", "any"].includes(cabinParam ?? "")) {
+      setValue("cabinClass", cabinParam as QuoteFormValues["cabinClass"]);
+    }
+    const baggageParam = searchParams.get("baggage");
+    if (baggageParam) {
+      setValue("checkedBaggage", baggageParam === "0" ? "no" : "yes");
+      if (baggageParam === "extra") setValue("baggageNotes", "Extra baggage required");
+    }
+
     const marketParam = searchParams.get("market");
     if (marketParam === "east-african-resident") setValue("residency", "resident");
     if (marketParam === "non-resident") setValue("residency", "non-resident");
@@ -215,7 +242,7 @@ export function GuidedQuoteForm() {
       setValue("mealPlan", boardParam as QuoteFormValues["mealPlan"]);
     }
     if (hotelParam) {
-      setValue("rooms", 1);
+      if (!(Number.isInteger(roomsParam) && roomsParam >= 1 && roomsParam <= 50)) setValue("rooms", 1);
       setValue(
         "roomConfiguration",
         [hotelParam, roomParam, occupancyParam].filter(Boolean).join(" · "),
@@ -462,107 +489,112 @@ export function GuidedQuoteForm() {
                 />
               ))}
             </div>
-            {isFlights ? (
-              <AirportAutocomplete
-                label="Where would you like to go?"
-                hint="Type a city and pick the airport — e.g. Dubai (DXB)."
-                placeholder="e.g. Dubai, Mumbai, London"
-                value={destinationValue ?? ""}
-                onChange={(v) => setValue("destination", v, { shouldValidate: true })}
-                error={errors.destination?.message}
+            {service === "flights" ? (
+              <FlightFinder
+                key={`flight-${departureCityValue}-${destinationValue}-${departureDateValue}-${returnDateValue}`}
+                initial={{
+                  origin: departureCityValue || "Nairobi (NBO)",
+                  destination: destinationValue || "",
+                  departureDate: departureDateValue || "",
+                  returnDate: returnDateValue || "",
+                  tripType: tripTypeValue === "one-way" ? "one-way" : "return",
+                  cabinClass: cabinClassValue ?? "economy",
+                  baggage: checkedBaggageValue === "yes" ? "1" : "0",
+                  adults: adultsValue || 1,
+                  children: children || 0,
+                }}
+                submitLabel="Continue"
+                onComplete={(flight: FlightSearchValues) => {
+                  setValue("departureCity", flight.origin, { shouldValidate: true });
+                  setValue("destination", flight.destination, { shouldValidate: true });
+                  setValue("departureDate", flight.departureDate, { shouldValidate: true });
+                  setValue("returnDate", flight.returnDate, { shouldValidate: true });
+                  setValue("tripType", flight.tripType, { shouldValidate: true });
+                  setValue("cabinClass", flight.cabinClass, { shouldValidate: true });
+                  setValue("checkedBaggage", flight.baggage === "0" ? "no" : "yes", { shouldValidate: true });
+                  setValue("baggageNotes", flight.baggage === "extra" ? "Extra baggage required" : flight.baggage === "0" ? "" : `${flight.baggage} checked bag(s)`);
+                  setValue("adults", flight.adults, { shouldValidate: true });
+                  setValue("children", flight.children, { shouldValidate: true });
+                  setValue("flexibleDates", false, { shouldValidate: true });
+                  void next();
+                }}
               />
-            ) : (
-              <TextField
-                label="Where would you like to go?"
-                hint="A country, city or park is ideal — “not sure yet” is completely fine."
-                placeholder="e.g. Maasai Mara, Dubai, not sure yet"
-                {...register("destination")}
-                error={errors.destination?.message}
+            ) : null}
+
+            {service === "hotels" ? (
+              <HotelSearchBar
+                destinations={hotelDestinations}
+                value={{
+                  destination: destinationValue || "",
+                  checkIn: departureDateValue || "",
+                  checkOut: returnDateValue || "",
+                  adults: adultsValue || 2,
+                  children: children || 0,
+                  rooms: roomsValue || 1,
+                  market: residencyValue === "non-resident" ? "non-resident" : "east-african-resident",
+                }}
+                onChange={(hotel: HotelSearchValues) => {
+                  setValue("destination", hotel.destination, { shouldValidate: true });
+                  setValue("departureDate", hotel.checkIn, { shouldValidate: true });
+                  setValue("returnDate", hotel.checkOut, { shouldValidate: true });
+                  setValue("adults", hotel.adults, { shouldValidate: true });
+                  setValue("children", hotel.children, { shouldValidate: true });
+                  setValue("rooms", hotel.rooms, { shouldValidate: true });
+                  setValue("residency", hotel.market === "non-resident" ? "non-resident" : "resident");
+                  setValue("flexibleDates", false, { shouldValidate: true });
+                }}
+                onSubmit={() => void next()}
+                submitLabel="Continue"
+                error={errors.destination?.message || errors.departureDate?.message || errors.returnDate?.message}
               />
-            )}
-            <button
-              type="button"
-              className="text-sm font-semibold text-ochre underline underline-offset-4 hover:text-clay"
-              onClick={() =>
-                setValue("destination", "Not sure yet — open to suggestions", {
-                  shouldValidate: true,
-                })
-              }
-            >
-              I&apos;m not sure yet
-            </button>
-            {isFlights ? (
-              <AirportAutocomplete
-                label="Flying from"
-                hint="Type a city and pick the airport — e.g. Nairobi (NBO)."
-                placeholder="e.g. Nairobi, Mombasa"
-                value={departureCityValue ?? ""}
-                onChange={(v) => setValue("departureCity", v, { shouldValidate: true })}
-                error={errors.departureCity?.message}
+            ) : null}
+
+            {service === "holiday-package" ? (
+              <TripBuilder
+                initialDestination={destinationValue || undefined}
+                submitLabel="Continue with this trip"
+                onComplete={(plan: TripPlan) => {
+                  setValue("destination", plan.stops.join(" → "), { shouldValidate: true });
+                  setValue("departureDate", plan.startDate, { shouldValidate: true });
+                  setValue("returnDate", "", { shouldValidate: true });
+                  setValue("flexibleDates", plan.flexible || !plan.startDate, { shouldValidate: true });
+                  setValue("adults", plan.adults, { shouldValidate: true });
+                  setValue("children", plan.children, { shouldValidate: true });
+                  setValue("childAges", plan.childAges, { shouldValidate: true });
+                  setValue("style", plan.style, { shouldValidate: true });
+                  setValue("budget", plan.budget, { shouldValidate: true });
+                  setValue("includeFlights", plan.transport === "flights" || plan.transport === "mixed");
+                  setValue("includeDailyTransport", plan.transport !== "flights");
+                  setValue("activities", plan.activities);
+                  setValue("notes", plan.note);
+                  void next();
+                }}
               />
-            ) : (
-              <TextField
-                label="Starting point"
-                required={false}
-                placeholder="e.g. Nairobi"
-                {...register("departureCity")}
-                error={errors.departureCity?.message}
-              />
-            )}
-            <CheckboxField
-              label="I'm open to alternative destinations if they fit better"
-              {...register("flexibleDestination")}
-            />
-            <div className="grid gap-5 sm:grid-cols-2">
-              <TextField
-                label="Departure date (approximate)"
-                type="date"
-                required={!flexibleDates}
-                {...register("departureDate")}
-                error={errors.departureDate?.message}
-              />
-              <TextField
-                label="Return date"
-                type="date"
-                required={false}
-                {...register("returnDate")}
-                error={errors.returnDate?.message}
-              />
-            </div>
-            <CheckboxField
-              label="My dates are flexible"
-              {...register("flexibleDates")}
-            />
-            <p className="text-xs text-stone">
-              Rough dates are enough — availability and prices are confirmed by a consultant
-              before anything is booked.
-            </p>
+            ) : null}
+
+            {service === "not-sure" ? (
+              <>
+                <TextField label="Where would you like to go?" placeholder="e.g. Maasai Mara, Dubai, not sure yet" {...register("destination")} error={errors.destination?.message} />
+                <TextField label="Starting point" required={false} placeholder="e.g. Nairobi" {...register("departureCity")} error={errors.departureCity?.message} />
+                <div className="grid gap-5 sm:grid-cols-2">
+                  <TextField label="Departure date (approximate)" type="date" required={!flexibleDates} {...register("departureDate")} error={errors.departureDate?.message} />
+                  <TextField label="Return date" type="date" required={false} {...register("returnDate")} error={errors.returnDate?.message} />
+                </div>
+                <CheckboxField label="My dates are flexible" {...register("flexibleDates")} />
+              </>
+            ) : null}
           </>
         ) : null}
 
         {/* ---------------------------------------------------------- preferences */}
         {step.id === "preferences" ? (
           <>
-            <div className="grid gap-5 sm:grid-cols-2">
-              <TextField
-                label="Adults"
-                type="number"
-                min={1}
-                max={99}
-                inputMode="numeric"
-                {...register("adults")}
-                error={errors.adults?.message}
-              />
-              <TextField
-                label="Children (2–11)"
-                type="number"
-                min={0}
-                max={99}
-                inputMode="numeric"
-                {...register("children")}
-                error={errors.children?.message}
-              />
-            </div>
+            {service === "not-sure" ? (
+              <div className="grid gap-5 sm:grid-cols-2">
+                <TextField label="Adults" type="number" min={1} max={99} inputMode="numeric" {...register("adults")} error={errors.adults?.message} />
+                <TextField label="Children (2-11)" type="number" min={0} max={99} inputMode="numeric" {...register("children")} error={errors.children?.message} />
+              </div>
+            ) : null}
             {children > 0 ? (
               <TextField
                 label="Ages of children"
@@ -599,34 +631,7 @@ export function GuidedQuoteForm() {
 
             {service === "flights" ? (
               <fieldset className="space-y-5 border-t border-parchment pt-5">
-                <legend className="eyebrow pt-5 text-ochre">Flight preferences</legend>
-                <div className="grid gap-5 sm:grid-cols-2">
-                  <SelectField label="Trip type" {...register("tripType")} error={errors.tripType?.message}>
-                    <option value="return">Return</option>
-                    <option value="one-way">One-way</option>
-                    <option value="multi-city">Multi-city</option>
-                  </SelectField>
-                  <SelectField
-                    label="Cabin class"
-                    {...register("cabinClass")}
-                    error={errors.cabinClass?.message}
-                  >
-                    <option value="any">Any / best value</option>
-                    <option value="economy">Economy</option>
-                    <option value="premium-economy">Premium economy</option>
-                    <option value="business">Business</option>
-                    <option value="first">First</option>
-                  </SelectField>
-                </div>
-                <SelectField
-                  label="Checked baggage required?"
-                  {...register("checkedBaggage")}
-                  error={errors.checkedBaggage?.message}
-                >
-                  <option value="not-sure">Not sure</option>
-                  <option value="yes">Yes</option>
-                  <option value="no">No</option>
-                </SelectField>
+                <legend className="eyebrow pt-5 text-ochre">Anything else for the flight?</legend>
                 <TextField
                   label="Preferred airline"
                   required={false}
@@ -646,16 +651,7 @@ export function GuidedQuoteForm() {
             {service === "hotels" ? (
               <fieldset className="space-y-5 border-t border-parchment pt-5">
                 <legend className="eyebrow pt-5 text-ochre">Stay preferences</legend>
-                <div className="grid gap-5 sm:grid-cols-3">
-                  <TextField
-                    label="Rooms"
-                    type="number"
-                    min={1}
-                    max={50}
-                    inputMode="numeric"
-                    {...register("rooms")}
-                    error={errors.rooms?.message}
-                  />
+                <div className="grid gap-5 sm:grid-cols-2">
                   <SelectField
                     label="Hotel category"
                     {...register("hotelCategory")}
@@ -694,24 +690,8 @@ export function GuidedQuoteForm() {
 
             {service === "holiday-package" ? (
               <fieldset className="space-y-5 border-t border-parchment pt-5">
-                <legend className="eyebrow pt-5 text-ochre">Trip preferences</legend>
-                <div className="grid gap-5 sm:grid-cols-3">
-                  <SelectField label="Travel style" {...register("style")} error={errors.style?.message}>
-                    {travelStyles.map((s) => (
-                      <option key={s} value={s}>
-                        {STYLE_LABELS[s]}
-                      </option>
-                    ))}
-                  </SelectField>
-                  <SelectField
-                    label="Road or fly-in?"
-                    {...register("accessPreference")}
-                    error={errors.accessPreference?.message}
-                  >
-                    <option value="either">Either — advise me</option>
-                    <option value="road">By road</option>
-                    <option value="fly-in">Fly-in</option>
-                  </SelectField>
+                <legend className="eyebrow pt-5 text-ochre">Complete the package</legend>
+                <div className="grid gap-5 sm:grid-cols-2">
                   <SelectField
                     label="Accommodation category"
                     {...register("accommodationStyle")}
@@ -733,12 +713,6 @@ export function GuidedQuoteForm() {
                     <CheckboxField label="Transport during the trip" {...register("includeDailyTransport")} />
                   </div>
                 </fieldset>
-                <TextAreaField
-                  label="Tours and activities you'd like"
-                  placeholder="Game drives, balloon safari, snorkelling…"
-                  {...register("activities")}
-                  error={errors.activities?.message}
-                />
                 <TextField
                   label="Special occasion"
                   required={false}
@@ -843,7 +817,11 @@ export function GuidedQuoteForm() {
           </Button>
         ) : (
           <Button type="submit" size="lg" disabled={submitState.status === "submitting"}>
-            {submitState.status === "submitting" ? "Sending..." : "Send enquiry"}
+            {submitState.status === "submitting"
+              ? "Sending..."
+              : selectedRateFromUrl
+                ? "Get availability"
+                : "Send enquiry"}
           </Button>
         )}
         <p className="w-full text-xs text-stone sm:ml-auto sm:w-auto">

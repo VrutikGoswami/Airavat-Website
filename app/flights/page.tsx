@@ -7,6 +7,7 @@ import { EditorialCTA } from "@/components/editorial/EditorialCTA";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { ButtonLink } from "@/components/ui/Button";
 import { WhatsAppButton } from "@/components/ui/WhatsAppButton";
+import { FlightFinder } from "@/components/flights/FlightFinder";
 
 export const metadata: Metadata = {
   title: "Flight Finder — Routes from Kenya",
@@ -46,6 +47,16 @@ export default function FlightsPage() {
               <span className="font-bold text-ink">A quotation before you commit.</span> We confirm
               fares, baggage and timings in writing first — you only pay once you&apos;re happy.
             </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="border-b border-parchment bg-ivory">
+        <div className="container-site py-10 sm:py-12">
+          <p className="eyebrow text-ochre">Flight finder</p>
+          <h2 className="display-serif mt-2 text-3xl text-ink sm:text-4xl">Where are you flying?</h2>
+          <div className="mt-6">
+            <FlightFinder submitLabel="Continue" />
           </div>
         </div>
       </section>

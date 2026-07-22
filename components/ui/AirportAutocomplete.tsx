@@ -16,6 +16,7 @@ type Props = {
   required?: boolean;
   placeholder?: string;
   name?: string;
+  variant?: "field" | "search";
 };
 
 /**
@@ -32,6 +33,7 @@ export function AirportAutocomplete({
   required = true,
   placeholder = "City or airport",
   name,
+  variant = "field",
 }: Props) {
   const id = useId();
   const listId = `${id}-list`;
@@ -70,7 +72,7 @@ export function AirportAutocomplete({
 
   return (
     <div>
-      <label htmlFor={id} className="mb-1.5 block text-sm font-bold">
+      <label htmlFor={id} className={variant === "search" ? "sr-only" : "mb-1.5 block text-sm font-bold"}>
         {label}
         {required ? null : <span className="ml-2 font-normal text-stone">(optional)</span>}
       </label>
@@ -80,6 +82,11 @@ export function AirportAutocomplete({
         </p>
       ) : null}
       <div className="relative">
+        {variant === "search" ? (
+          <span className="pointer-events-none absolute left-4 top-2 z-10 text-[11px] font-semibold text-stone">
+            {label}
+          </span>
+        ) : null}
         <input
           id={id}
           name={name}
@@ -94,7 +101,11 @@ export function AirportAutocomplete({
           aria-describedby={[hint ? `${id}-hint` : null, error ? `${id}-error` : null]
             .filter(Boolean)
             .join(" ") || undefined}
-          className={inputCls}
+          className={
+            variant === "search"
+              ? "min-h-16 w-full border-0 bg-white px-4 pb-2 pt-6 text-sm font-bold text-ink outline-none placeholder:font-normal placeholder:text-stone focus-visible:outline-2 focus-visible:outline-ochre aria-[invalid=true]:ring-2 aria-[invalid=true]:ring-clay"
+              : inputCls
+          }
           placeholder={placeholder}
           value={value}
           onChange={(e) => {

@@ -80,7 +80,7 @@ export const quoteSchema = z
     budget: z.enum(budgetBands),
     residency: z.enum(["resident", "non-resident", "not-sure"]).optional(),
 
-    tripType: z.enum(["one-way", "return", "multi-city"]).optional(),
+    tripType: z.enum(["one-way", "return"]).optional(),
     cabinClass: z
       .enum(["economy", "premium-economy", "business", "first", "any"])
       .optional(),
@@ -153,6 +153,20 @@ export const quoteSchema = z
         code: z.ZodIssueCode.custom,
         path: ["returnDate"],
         message: "Return date can’t be before departure",
+      });
+    }
+    if (data.service === "hotels" && !data.returnDate) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["returnDate"],
+        message: "Choose a check-out date",
+      });
+    }
+    if (data.service === "flights" && data.tripType === "return" && !data.returnDate) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["returnDate"],
+        message: "Choose a return date",
       });
     }
     if (data.departureDate && !data.flexibleDates) {

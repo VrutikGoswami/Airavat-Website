@@ -5,6 +5,7 @@ import { GuidedQuoteForm } from "@/components/forms/GuidedQuoteForm";
 import { WhatsAppButton } from "@/components/ui/WhatsAppButton";
 import { NoBookingNote } from "@/components/editorial/NoBookingNote";
 import { ResponseTimeNote } from "@/components/editorial/ResponseTimeNote";
+import { getRateDestinations } from "@/lib/rate-catalog";
 
 export const metadata: Metadata = {
   title: "Request a Travel Quote",
@@ -12,7 +13,8 @@ export const metadata: Metadata = {
     "Start a short travel enquiry for flights, hotels, safaris, groups or holidays. A consultant replies with current options.",
 };
 
-export default function RequestAQuotePage() {
+export default async function RequestAQuotePage() {
+  const hotelDestinations = await getRateDestinations();
   return (
     <>
       <PageHero
@@ -27,7 +29,7 @@ export default function RequestAQuotePage() {
       <section className="container-site grid gap-14 py-14 sm:py-20 lg:grid-cols-[1.5fr_1fr] lg:gap-20">
         <div className="max-w-2xl">
           <Suspense fallback={<div className="h-96 animate-pulse bg-sand" aria-hidden />}>
-            <GuidedQuoteForm />
+            <GuidedQuoteForm hotelDestinations={hotelDestinations} />
           </Suspense>
         </div>
 
