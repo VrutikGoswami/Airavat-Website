@@ -283,7 +283,10 @@ export async function getRateSheetsForDestination(destinationSlug: string): Prom
 
 export async function getRateDestinations(): Promise<RateDestinationOption[]> {
   noStore();
-  const catalog = await databaseRateSheets();
+  const [catalog, mediaCatalog] = await Promise.all([
+    databaseRateSheets(),
+    getHotelMediaCatalog(),
+  ]);
   const destinations = new Map<string, { name: string; hotels: Set<string> }>();
   for (const sheet of catalog) {
     const entry = destinations.get(sheet.destinationSlug) ?? {
@@ -292,6 +295,14 @@ export async function getRateDestinations(): Promise<RateDestinationOption[]> {
     };
     entry.hotels.add(sheet.hotelName);
     destinations.set(sheet.destinationSlug, entry);
+  }
+  for (const hotel of mediaCatalog) {
+    const entry = destinations.get(hotel.destinationSlug) ?? {
+      name: hotel.destinationName,
+      hotels: new Set<string>(),
+    };
+    entry.hotels.add(hotel.name);
+    destinations.set(hotel.destinationSlug, entry);
   }
   return [...destinations.entries()]
     .map(([slug, entry]) => ({ slug, name: entry.name, hotelCount: entry.hotels.size }))

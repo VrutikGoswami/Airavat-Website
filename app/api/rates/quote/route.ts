@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { quoteDestination, isIsoDate, stayNights, ISO_DATE_PATTERN } from "@/lib/rates";
-import { getRateDestinations, getRateSheetsForDestination } from "@/lib/rate-catalog";
+import { quoteDestination, isIsoDate, stayNights, ISO_DATE_PATTERN, type HotelQuote } from "@/lib/rates";
+import { getHotelMediaCatalog, getRateDestinations, getRateSheetsForDestination } from "@/lib/rate-catalog";
 import { RATE_MAX_NIGHTS } from "@/config/rates";
 
 /**
@@ -54,7 +54,41 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "We don't have rates loaded for that destination yet." }, { status: 404 });
   }
 
-  const sheets = await getRateSheetsForDestination(destination);
+  const [sheets, mediaCatalog] = await Promise.all([
+    getRateSheetsForDestination(destination),
+    getHotelMediaCatalog(),
+  ]);
   const quotes = quoteDestination(sheets, destination, checkIn, checkOut, market);
-  return NextResponse.json({ destination, checkIn, checkOut, market, nights, quotes });
+  const quotedHotelNames = new Set(quotes.map((quote) => quote.hotelName.trim().toLowerCase()));
+  const mediaOnlyQuotes: HotelQuote[] = mediaCatalog
+    .filter((hotel) => hotel.destinationSlug === destination)
+    .filter((hotel) => !quotedHotelNames.has(hotel.name.trim().toLowerCase()))
+    .map((hotel) => ({
+      hotelSlug: `${hotel.slug}-media`,
+      hotelName: hotel.name,
+      destinationSlug: hotel.destinationSlug,
+      destinationName: hotel.destinationName,
+      websiteUrl: hotel.websiteUrl,
+      images: hotel.images,
+      currency: "KES",
+      board: "room-only",
+      market,
+      checkIn,
+      checkOut,
+      nights,
+      available: false,
+      unavailableReason: "Current rates for this hotel are confirmed on request.",
+      seasons: [],
+      rooms: [],
+      familySupplements: [],
+      notes: [],
+    }));
+  return NextResponse.json({
+    destination,
+    checkIn,
+    checkOut,
+    market,
+    nights,
+    quotes: [...quotes, ...mediaOnlyQuotes],
+  });
 }

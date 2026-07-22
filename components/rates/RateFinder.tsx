@@ -665,7 +665,7 @@ function HotelGallery({ quote, onClose }: { quote: HotelQuote; onClose: () => vo
                   alt={`${quote.hotelName} — photo ${i + 1}`}
                   fill
                   sizes="(min-width: 640px) 45vw, 92vw"
-                  className="object-cover"
+                  className="object-contain"
                 />
               </div>
             ))}
