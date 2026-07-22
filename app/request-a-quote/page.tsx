@@ -26,14 +26,14 @@ export default async function RequestAQuotePage() {
         size="compact"
       />
 
-      <section className="container-site grid gap-14 py-14 sm:py-20 lg:grid-cols-[1.5fr_1fr] lg:gap-20">
-        <div className="max-w-2xl">
+      <section className="container-site grid gap-12 py-14 sm:py-20 2xl:grid-cols-[minmax(0,1fr)_18rem] 2xl:gap-10">
+        <div className="min-w-0 max-w-none">
           <Suspense fallback={<div className="h-96 animate-pulse bg-sand" aria-hidden />}>
             <GuidedQuoteForm hotelDestinations={hotelDestinations} />
           </Suspense>
         </div>
 
-        <aside className="space-y-8 lg:pt-2">
+        <aside className="space-y-8 2xl:pt-2">
           <div className="border border-parchment bg-sand/50 p-6">
             <h2 className="font-bold">What happens next</h2>
             <ol className="mt-4 list-decimal space-y-2.5 pl-5 text-sm leading-relaxed text-ink-soft">

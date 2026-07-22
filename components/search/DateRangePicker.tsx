@@ -9,6 +9,7 @@ type Props = {
   onChange: (startDate: string, endDate: string) => void;
   mode?: "single" | "range";
   label?: string;
+  helper?: string;
   error?: string;
 };
 
@@ -113,6 +114,7 @@ export function DateRangePicker({
   onChange,
   mode = "range",
   label = "Select dates",
+  helper,
   error,
 }: Props) {
   const [open, setOpen] = useState(false);
@@ -167,6 +169,7 @@ export function DateRangePicker({
               ? `${formatShort(startDate)} - ${formatShort(endDate)}`
               : formatShort(startDate)}
           </span>
+          {helper ? <span className="block text-[10px] font-semibold text-clay">{helper}</span> : null}
         </span>
       </button>
       {open ? (

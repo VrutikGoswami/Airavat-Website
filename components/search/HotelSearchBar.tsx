@@ -16,6 +16,14 @@ export type HotelSearchValues = {
   market: "east-african-resident" | "non-resident";
 };
 
+function nightsBetween(checkIn: string, checkOut: string): number {
+  if (!checkIn || !checkOut) return 0;
+  const start = Date.parse(`${checkIn}T00:00:00Z`);
+  const end = Date.parse(`${checkOut}T00:00:00Z`);
+  if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return 0;
+  return Math.round((end - start) / 86_400_000);
+}
+
 export function HotelSearchBar({
   destinations,
   value,
@@ -36,6 +44,7 @@ export function HotelSearchBar({
   showMarket?: boolean;
 }) {
   const occupancy: Occupancy = { adults: value.adults, children: value.children, rooms: value.rooms };
+  const nights = nightsBetween(value.checkIn, value.checkOut);
 
   return (
     <div>
@@ -64,6 +73,7 @@ export function HotelSearchBar({
           endDate={value.checkOut}
           onChange={(checkIn, checkOut) => onChange({ ...value, checkIn, checkOut })}
           label="Select dates"
+          helper={nights > 0 ? `${nights} ${nights === 1 ? "night" : "nights"}` : "Select stay dates"}
         />
         <OccupancyPicker
           value={occupancy}

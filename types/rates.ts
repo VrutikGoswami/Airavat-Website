@@ -32,8 +32,8 @@ export type OccupancyKey =
 
 /**
  * Per-night prices for one room type within one seasonal period. All values
- * are the full price for that occupancy (per-person sheets are converted to
- * room totals at transcription time; per-child keys stay per child).
+ * are the nightly price for one room in that occupancy band. Stay totals are
+ * calculated from room count and nights; per-child keys stay per child.
  */
 export type OccupancyRates = {
   single?: number;

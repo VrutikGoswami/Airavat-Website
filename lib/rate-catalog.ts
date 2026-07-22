@@ -125,7 +125,7 @@ function occupancyKey(row: RawRateRow): OccupancyKey | null {
   return null;
 }
 
-function nightlyAmount(row: RawRateRow, occupancy: OccupancyKey): number | null {
+function nightlyAmount(row: RawRateRow): number | null {
   const amount = Number(row.amount);
   const rateType = row.rate_type.toLowerCase();
   if (!Number.isFinite(amount) || amount <= 0) return null;
@@ -133,8 +133,9 @@ function nightlyAmount(row: RawRateRow, occupancy: OccupancyKey): number | null 
   if (rateType !== "accommodation") return null;
   if (row.unit_basis === "Per Room Per Night") return amount;
   if (row.unit_basis === "Per Person Per Night" || row.unit_basis === "Per Person Sharing Per Night") {
-    const guests = row.adults ?? (occupancy === "single" ? 1 : occupancy === "double" ? 2 : occupancy === "triple" ? 3 : 0);
-    return guests > 0 ? amount * guests : null;
+    // Supplier rows already describe the selected room/occupancy band. Public
+    // stay totals are driven by room count, never by multiplying travellers.
+    return amount;
   }
   return null;
 }
@@ -158,7 +159,7 @@ function buildSheets(rows: RawRateRow[]): HotelRateSheet[] {
     const board = mapBoard(row.meal_plan);
     const occupancy = occupancyKey(row);
     if (!market || !board || !occupancy || !row.valid_from || !row.valid_to) continue;
-    const amount = nightlyAmount(row, occupancy);
+    const amount = nightlyAmount(row);
     if (amount === null || !row.room_type || row.room_type === "N/A") continue;
 
     const basis = document.pricing_basis as RateBasis;

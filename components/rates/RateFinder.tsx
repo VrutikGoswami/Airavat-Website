@@ -480,6 +480,7 @@ function QuoteBody({
                 <td className="py-3 pr-4 font-bold text-ink">{room.roomTypeName}</td>
                 {columns.map((col) => {
                   const occ = room.occupancies[col.key];
+                  const stayTotal = occ ? occ.total * party.rooms : 0;
                   return (
                     <td key={col.key} className="p-0 align-middle">
                       {occ ? (
@@ -488,7 +489,7 @@ function QuoteBody({
                             quote,
                             room,
                             occupancy: col.label,
-                            total: occ.total,
+                            total: stayTotal,
                             perNight: occ.perNight,
                             checkIn,
                             checkOut,
@@ -498,16 +499,19 @@ function QuoteBody({
                             rooms: party.rooms,
                             childAges: party.childAges,
                           })}
-                          aria-label={`Select ${quote.hotelName}, ${room.roomTypeName}, ${col.label}, ${money(occ.total, quote.currency)} total`}
+                          aria-label={`Get availability for ${quote.hotelName}, ${room.roomTypeName}, ${col.label}, ${money(stayTotal, quote.currency)} total for ${party.rooms} room${party.rooms === 1 ? "" : "s"}`}
                           className={`group/rate block min-w-36 border-l-2 px-2 py-3 transition-colors hover:border-ochre hover:bg-ochre/10 focus-visible:border-ochre focus-visible:bg-ochre/10 ${
                             col.key === recommended ? "border-ochre/40 bg-ochre/5" : "border-transparent"
                           }`}
                         >
                           <span className="block font-semibold text-ink group-hover/rate:text-clay">
-                            {money(occ.total, quote.currency)}
+                            {money(occ.perNight, quote.currency)}
                           </span>
                           <span className="block text-xs text-stone">
-                            {money(occ.perNight, quote.currency)}/night
+                            per room / night
+                          </span>
+                          <span className="mt-1 block text-xs font-bold text-ink-soft">
+                            {money(stayTotal, quote.currency)} total · {party.rooms} {party.rooms === 1 ? "room" : "rooms"}
                           </span>
                           <span className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-ochre">
                             Get availability <ArrowUpRight aria-hidden className="size-3.5" />

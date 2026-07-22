@@ -9,9 +9,11 @@ import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/Button";
 import { WhatsAppButton } from "@/components/ui/WhatsAppButton";
 import { FlightFinder, type FlightSearchValues } from "@/components/flights/FlightFinder";
+import { FlightOptions } from "@/components/flights/FlightOptions";
 import { HotelSearchBar, type HotelSearchValues } from "@/components/search/HotelSearchBar";
 import { TripBuilder, type TripPlan } from "@/components/packages/TripBuilder";
 import type { RateDestinationOption } from "@/types/rates";
+import type { PublicFlightOffer } from "@/types/flight-options";
 import {
   CheckboxField,
   OptionTile,
@@ -34,8 +36,6 @@ import {
   type QuoteFormValues,
 } from "@/lib/validation/quote";
 import { destinations } from "@/data/destinations";
-
-const DRAFT_KEY = "travel-enquiry-draft-v1";
 
 /**
  * Services offered in the quote flow. Safaris and transport fold into a
@@ -61,16 +61,6 @@ type SubmitState =
   | { status: "error"; message: string }
   | { status: "success"; reference: string };
 
-function readDraft(): { values: Partial<QuoteFormValues>; step: number } | null {
-  try {
-    const raw = window.localStorage.getItem(DRAFT_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
-}
-
 function sourceContext(searchParams: URLSearchParams) {
   const utm = Object.fromEntries(
     Array.from(searchParams.entries()).filter(([key]) => key.startsWith("utm_")),
@@ -88,14 +78,12 @@ function sourceContext(searchParams: URLSearchParams) {
 
 /**
  * Guided, multi-stage enquiry flow. Consultative by design: every stage
- * allows "not sure", progress is saved locally, and submission clearly
- * creates an enquiry — never a booking.
+ * allows "not sure" and submission clearly creates an enquiry — never a booking.
  */
 export function GuidedQuoteForm({ hotelDestinations }: { hotelDestinations: RateDestinationOption[] }) {
   const searchParams = useSearchParams();
   const [stepIndex, setStepIndex] = useState(0);
   const [submitState, setSubmitState] = useState<SubmitState>({ status: "idle" });
-  const [resumedDraft, setResumedDraft] = useState(false);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const startedRef = useRef(false);
 
@@ -106,7 +94,6 @@ export function GuidedQuoteForm({ hotelDestinations }: { hotelDestinations: Rate
     watch,
     setValue,
     getValues,
-    reset,
     formState: { errors },
   } = useForm<QuoteFormValues>({
     resolver: zodResolver(quoteSchema),
@@ -130,16 +117,10 @@ export function GuidedQuoteForm({ hotelDestinations }: { hotelDestinations: Rate
   const step = QUOTE_STEPS[stepIndex];
   const selectedRateFromUrl = searchParams.get("rateSelection") === "1";
 
-  // Restore draft, then apply page-context preselection from the URL.
+  // Apply page-context preselection from the URL. Quote state is deliberately
+  // session-local, so leaving this page always starts a fresh enquiry.
   useEffect(() => {
-    const draft = readDraft();
-    if (draft?.values) {
-      reset({ ...quoteDefaults, ...draft.values, consent: false });
-      if (typeof draft.step === "number" && draft.step > 0 && draft.step < QUOTE_STEPS.length) {
-        setStepIndex(draft.step);
-        setResumedDraft(true);
-      }
-    }
+    window.localStorage.removeItem("travel-enquiry-draft-v1");
     const serviceParam = searchParams.get("service");
     if (serviceParam) {
       setValue("service", toVisibleService(serviceParam));
@@ -267,7 +248,6 @@ export function GuidedQuoteForm({ hotelDestinations }: { hotelDestinations: Rate
           .join(" · "),
       );
       setStepIndex(QUOTE_STEPS.findIndex((quoteStep) => quoteStep.id === "contact"));
-      setResumedDraft(false);
     } else if (hotelParam) {
       noteLines.push(`Hotel preference: ${hotelParam}`);
     }
@@ -275,21 +255,6 @@ export function GuidedQuoteForm({ hotelDestinations }: { hotelDestinations: Rate
     if (noteLines.length) setValue("notes", noteLines.join(" · "));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // Persist draft while typing (never the consent checkbox).
-  useEffect(() => {
-    const subscription = watch((values) => {
-      try {
-        window.localStorage.setItem(
-          DRAFT_KEY,
-          JSON.stringify({ values: { ...values, consent: false }, step: stepIndex }),
-        );
-      } catch {
-        // Storage unavailable (private mode etc.) — the form still works.
-      }
-    });
-    return () => subscription.unsubscribe();
-  }, [watch, stepIndex]);
 
   useEffect(() => {
     if (!startedRef.current) {
@@ -345,11 +310,6 @@ export function GuidedQuoteForm({ hotelDestinations }: { hotelDestinations: Rate
         }
         if (values.service === "group") {
           track("group_enquiry_submitted");
-        }
-        try {
-          window.localStorage.removeItem(DRAFT_KEY);
-        } catch {
-          // ignore
         }
         setSubmitState({ status: "success", reference: body.reference });
         focusHeading();
@@ -456,18 +416,16 @@ export function GuidedQuoteForm({ hotelDestinations }: { hotelDestinations: Rate
         </ol>
       </nav>
 
-      {resumedDraft && stepIndex > 0 ? (
-        <p className="mb-6 border-l-2 border-gold bg-gold/10 px-4 py-3 text-sm">
-          We restored your earlier answers so you can pick up where you left off.
-        </p>
-      ) : null}
-
       <h2
         ref={headingRef}
         tabIndex={-1}
         className="display-serif text-2xl outline-none sm:text-3xl"
       >
-        {selectedRateFromUrl && step.id === "contact" ? "Confirm your details" : step.title}
+        {selectedRateFromUrl && step.id === "contact"
+          ? "Confirm your details"
+          : service === "flights" && step.id === "preferences"
+            ? "Choose a flight option"
+            : step.title}
       </h2>
 
       <div className="mt-7 space-y-5">
@@ -589,6 +547,37 @@ export function GuidedQuoteForm({ hotelDestinations }: { hotelDestinations: Rate
         {/* ---------------------------------------------------------- preferences */}
         {step.id === "preferences" ? (
           <>
+            {service === "flights" ? (
+              <FlightOptions
+                origin={departureCityValue || ""}
+                destination={destinationValue || ""}
+                departureDate={departureDateValue || ""}
+                returnDate={tripTypeValue === "one-way" ? "" : returnDateValue || ""}
+                adults={adultsValue || 1}
+                childCount={children || 0}
+                cabinClass={cabinClassValue}
+                onSelect={(offer: PublicFlightOffer) => {
+                  const route = offer.legs
+                    .map((leg) => `${leg.origin}-${leg.destination} ${leg.departure}`)
+                    .join("; ");
+                  const selection = [
+                    `Selected flight option: ${offer.airline}`,
+                    `Flights: ${offer.legs.flatMap((leg) => leg.flightNumbers).join(" / ")}`,
+                    `Route and dates: ${route}`,
+                    `Cabin: ${offer.cabin.replaceAll("_", " ")}`,
+                    `Baggage: ${offer.baggage}`,
+                    `Meals: ${offer.meals}`,
+                    `Fare: ${offer.currency} ${offer.total}`,
+                  ].join(" · ");
+                  setValue("preferredAirline", offer.airline);
+                  setValue("baggageNotes", `Baggage: ${offer.baggage}. Meals: ${offer.meals}.`);
+                  setValue("notes", [getValues("notes"), selection].filter(Boolean).join(" · "));
+                  goToStep(2);
+                }}
+                onContinueWithoutFare={() => goToStep(2)}
+              />
+            ) : (
+              <>
             {service === "not-sure" ? (
               <div className="grid gap-5 sm:grid-cols-2">
                 <TextField label="Adults" type="number" min={1} max={99} inputMode="numeric" {...register("adults")} error={errors.adults?.message} />
@@ -628,25 +617,6 @@ export function GuidedQuoteForm({ hotelDestinations }: { hotelDestinations: Rate
                 </SelectField>
               ) : null}
             </div>
-
-            {service === "flights" ? (
-              <fieldset className="space-y-5 border-t border-parchment pt-5">
-                <legend className="eyebrow pt-5 text-ochre">Anything else for the flight?</legend>
-                <TextField
-                  label="Preferred airline"
-                  required={false}
-                  placeholder="e.g. Kenya Airways"
-                  {...register("preferredAirline")}
-                  error={errors.preferredAirline?.message}
-                />
-                <TextAreaField
-                  label="Baggage or special requirements"
-                  placeholder="Extra bags, sports equipment, wheelchair assistance…"
-                  {...register("baggageNotes")}
-                  error={errors.baggageNotes?.message}
-                />
-              </fieldset>
-            ) : null}
 
             {service === "hotels" ? (
               <fieldset className="space-y-5 border-t border-parchment pt-5">
@@ -731,6 +701,8 @@ export function GuidedQuoteForm({ hotelDestinations }: { hotelDestinations: Rate
                 error={errors.accessibilityNeeds?.message}
               />
             </div>
+              </>
+            )}
           </>
         ) : null}
 
@@ -811,7 +783,7 @@ export function GuidedQuoteForm({ hotelDestinations }: { hotelDestinations: Rate
             <ChevronLeft aria-hidden className="size-4" /> Back
           </Button>
         ) : null}
-        {step.id !== "contact" ? (
+        {step.id !== "contact" && !(service === "flights" && step.id === "preferences") ? (
           <Button onClick={next} size="lg">
             {stepIndex === 0 ? "Start my enquiry" : "Continue"}
           </Button>
@@ -819,9 +791,11 @@ export function GuidedQuoteForm({ hotelDestinations }: { hotelDestinations: Rate
           <Button type="submit" size="lg" disabled={submitState.status === "submitting"}>
             {submitState.status === "submitting"
               ? "Sending..."
-              : selectedRateFromUrl
-                ? "Get availability"
-                : "Send enquiry"}
+              : service === "flights"
+                ? "Request availability"
+                : selectedRateFromUrl
+                  ? "Get availability"
+                  : "Send enquiry"}
           </Button>
         )}
         <p className="w-full text-xs text-stone sm:ml-auto sm:w-auto">
