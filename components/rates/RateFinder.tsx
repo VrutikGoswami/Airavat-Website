@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { ArrowUpRight, ChevronDown, ExternalLink, Images, X } from "lucide-react";
-import type { RateDestinationOption } from "@/data/rates";
+import type { RateDestinationOption } from "@/types/rates";
 import type { HotelQuote, OccupancyQuote, RoomTypeQuote } from "@/lib/rates";
 import type { OccupancyKey } from "@/types/rates";
 import { Button, ButtonLink } from "@/components/ui/Button";
@@ -241,6 +241,22 @@ export function RateFinder({
         hotelGroups.push(fresh);
       }
     }
+  }
+
+  if (destinations.length === 0) {
+    return (
+      <div className="border-y border-parchment bg-ivory px-5 py-10 text-center sm:px-8">
+        <h2 className="display-serif text-2xl text-ink">Supplier rates are being updated</h2>
+        <p className="mx-auto mt-2 max-w-xl text-sm leading-relaxed text-ink-soft">
+          Our consultants can still check current hotel prices and availability for your dates.
+        </p>
+        <div className="mt-5">
+          <ButtonLink href="/request-a-quote?service=hotels" variant="outline">
+            Request a hotel quote
+          </ButtonLink>
+        </div>
+      </div>
+    );
   }
 
   return (

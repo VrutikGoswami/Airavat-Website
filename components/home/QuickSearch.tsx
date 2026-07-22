@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { BedDouble, Plane, Sparkles } from "lucide-react";
-import type { RateDestinationOption } from "@/data/rates";
+import type { RateDestinationOption } from "@/types/rates";
 import { Button } from "@/components/ui/Button";
 import { SelectField, TextField } from "@/components/forms/fields";
 import { AirportAutocomplete } from "@/components/ui/AirportAutocomplete";

@@ -141,3 +141,5 @@ export type HotelRateSheet = {
   /** Short guest-facing notes worth showing alongside prices. */
   notes?: string[];
 };
+
+export type RateDestinationOption = { slug: string; name: string; hotelCount: number };

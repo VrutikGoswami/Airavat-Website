@@ -1,4 +1,4 @@
-import type { HotelRateSheet } from "@/types/rates";
+import type { HotelRateSheet, RateDestinationOption } from "@/types/rates";
 import { maishaGroupRateSheets } from "@/data/rates/maisha-group";
 import { almanaraRateSheets } from "@/data/rates/almanara";
 import { jacarandaIobrRateSheets } from "@/data/rates/jacaranda-iobr";
@@ -29,8 +29,6 @@ export const rateSheets: HotelRateSheet[] = [
   ...diamondsLeisureRateSheets,
   ...dianiReefRateSheets,
 ];
-
-export type RateDestinationOption = { slug: string; name: string; hotelCount: number };
 
 /** Destinations that currently have at least one rate sheet loaded. */
 export function rateDestinations(): RateDestinationOption[] {

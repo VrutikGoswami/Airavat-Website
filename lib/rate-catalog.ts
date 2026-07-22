@@ -2,15 +2,10 @@ import "server-only";
 
 import { unstable_noStore as noStore } from "next/cache";
 import { createClient } from "@supabase/supabase-js";
-import {
-  rateDestinations as staticRateDestinations,
-  rateSheets as staticRateSheets,
-  sheetsForDestination as staticSheetsForDestination,
-  type RateDestinationOption,
-} from "@/data/rates";
 import type {
   HotelRateSheet,
   OccupancyKey,
+  RateDestinationOption,
   RateBasis,
   RateBoard,
   RateMarket,
@@ -23,6 +18,9 @@ type RawHotel = {
   name: string;
   destination_slug: string;
   destination_name: string;
+  hotel_group: string | null;
+  website_url: string | null;
+  image_urls: string[] | null;
 };
 
 type RawDocument = {
@@ -141,12 +139,6 @@ function nightlyAmount(row: RawRateRow, occupancy: OccupancyKey): number | null 
   return null;
 }
 
-function catalogIdentity(sheet: HotelRateSheet): string {
-  return [sheet.hotelName, sheet.destinationSlug, sheet.market, sheet.board]
-    .map((value) => value.toLowerCase().trim())
-    .join("|");
-}
-
 function buildSheets(rows: RawRateRow[]): HotelRateSheet[] {
   type MutableSheet = HotelRateSheet & {
     _roomIds: Set<string>;
@@ -179,6 +171,9 @@ function buildSheets(rows: RawRateRow[]): HotelRateSheet[] {
         hotelName: hotel.name,
         destinationSlug: hotel.destination_slug,
         destinationName: hotel.destination_name,
+        group: hotel.hotel_group ?? undefined,
+        websiteUrl: hotel.website_url ?? undefined,
+        images: hotel.image_urls ?? [],
         currency: row.currency,
         market,
         basis,
@@ -252,7 +247,7 @@ async function databaseRateSheets(destinationSlug?: string): Promise<HotelRateSh
           id,rate_type,season_name,valid_from,valid_to,blackout_dates,room_type,meal_plan,
           occupancy,adults,children,amount,currency,market,unit_basis,minimum_stay,
           tax_included,conditions,approved_at,
-          hotel:rate_hotels!inner(slug,name,destination_slug,destination_name),
+          hotel:rate_hotels!inner(slug,name,destination_slug,destination_name,hotel_group,website_url,image_urls),
           document:rate_documents!inner(pricing_basis,status)
         `)
         .eq("active", true)
@@ -276,25 +271,14 @@ async function databaseRateSheets(destinationSlug?: string): Promise<HotelRateSh
   }
 }
 
-function mergeCatalog(dynamicSheets: HotelRateSheet[], fallbackSheets: HotelRateSheet[]): HotelRateSheet[] {
-  const dynamicIdentities = new Set(dynamicSheets.map(catalogIdentity));
-  return [
-    ...dynamicSheets,
-    ...fallbackSheets.filter((sheet) => !dynamicIdentities.has(catalogIdentity(sheet))),
-  ];
-}
-
 export async function getRateSheetsForDestination(destinationSlug: string): Promise<HotelRateSheet[]> {
   noStore();
-  const dynamicSheets = await databaseRateSheets(destinationSlug);
-  return mergeCatalog(dynamicSheets, staticSheetsForDestination(destinationSlug));
+  return databaseRateSheets(destinationSlug);
 }
 
 export async function getRateDestinations(): Promise<RateDestinationOption[]> {
   noStore();
-  const dynamicSheets = await databaseRateSheets();
-  if (dynamicSheets.length === 0) return staticRateDestinations();
-  const catalog = mergeCatalog(dynamicSheets, staticRateSheets);
+  const catalog = await databaseRateSheets();
   const destinations = new Map<string, { name: string; hotels: Set<string> }>();
   for (const sheet of catalog) {
     const entry = destinations.get(sheet.destinationSlug) ?? {
