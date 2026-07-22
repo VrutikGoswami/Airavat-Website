@@ -4,6 +4,7 @@ import { unstable_noStore as noStore } from "next/cache";
 import { createClient } from "@supabase/supabase-js";
 import type {
   HotelRateSheet,
+  HotelMediaItem,
   OccupancyKey,
   RateDestinationOption,
   RateBasis,
@@ -221,6 +222,9 @@ function buildSheets(rows: RawRateRow[]): HotelRateSheet[] {
     hotelName: sheet.hotelName,
     destinationSlug: sheet.destinationSlug,
     destinationName: sheet.destinationName,
+    group: sheet.group,
+    websiteUrl: sheet.websiteUrl,
+    images: sheet.images,
     currency: sheet.currency,
     market: sheet.market,
     basis: sheet.basis,
@@ -292,4 +296,30 @@ export async function getRateDestinations(): Promise<RateDestinationOption[]> {
   return [...destinations.entries()]
     .map(([slug, entry]) => ({ slug, name: entry.name, hotelCount: entry.hotels.size }))
     .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+export async function getHotelMediaCatalog(): Promise<HotelMediaItem[]> {
+  noStore();
+  const supabase = serverClient();
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from("rate_hotels")
+    .select("slug,name,destination_slug,destination_name,image_urls,website_url")
+    .eq("active", true)
+    .order("destination_name")
+    .order("name");
+  if (error) {
+    console.error("Could not load hotel media from Supabase.", error);
+    return [];
+  }
+  return ((data ?? []) as RawHotel[])
+    .filter((hotel) => (hotel.image_urls?.length ?? 0) > 0)
+    .map((hotel) => ({
+      slug: hotel.slug,
+      name: hotel.name,
+      destinationSlug: hotel.destination_slug,
+      destinationName: hotel.destination_name,
+      images: hotel.image_urls ?? [],
+      websiteUrl: hotel.website_url ?? undefined,
+    }));
 }

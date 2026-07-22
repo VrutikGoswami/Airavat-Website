@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { Check } from "lucide-react";
 import type { Service, ServiceSlug } from "@/types";
 import { getFaqs } from "@/data/faqs";
@@ -26,7 +27,7 @@ const SERVICE_TO_ENQUIRY: Record<ServiceSlug, string> = {
  * explanation, who it's for, what to send, an indicative quotation guide,
  * page-specific FAQs and a contextual conversion path.
  */
-export function ServicePageLayout({ service }: { service: Service }) {
+export function ServicePageLayout({ service, children }: { service: Service; children?: ReactNode }) {
   const quoteHref = `/request-a-quote?service=${SERVICE_TO_ENQUIRY[service.slug]}`;
   const serviceFaqs = getFaqs(service.faqIds);
   const guide = service.quotationGuide;
@@ -82,6 +83,8 @@ export function ServicePageLayout({ service }: { service: Service }) {
           <UsefulBasics extras={service.sendBasics} />
         </div>
       </section>
+
+      {children}
 
       {guide ? (
         <section className="rule-top">

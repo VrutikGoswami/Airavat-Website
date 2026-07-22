@@ -143,3 +143,12 @@ export type HotelRateSheet = {
 };
 
 export type RateDestinationOption = { slug: string; name: string; hotelCount: number };
+
+export type HotelMediaItem = {
+  slug: string;
+  name: string;
+  destinationSlug: string;
+  destinationName: string;
+  images: string[];
+  websiteUrl?: string;
+};

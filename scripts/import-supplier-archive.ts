@@ -178,6 +178,12 @@ async function main() {
   for (const sheet of rateSheets) {
     const slug = slugify(`${sheet.hotelName}-${sheet.destinationName}`);
     if (hotelIds.has(slug)) continue;
+    const { data: existingHotel, error: existingHotelError } = await supabase
+      .from("rate_hotels")
+      .select("image_urls")
+      .eq("slug", slug)
+      .maybeSingle();
+    if (existingHotelError) throw existingHotelError;
     const { data, error } = await supabase.from("rate_hotels").upsert({
       slug,
       name: sheet.hotelName,
@@ -186,7 +192,7 @@ async function main() {
       country: "Kenya",
       hotel_group: sheet.group ?? null,
       website_url: sheet.websiteUrl ?? null,
-      image_urls: sheet.images ?? [],
+      image_urls: sheet.images?.length ? sheet.images : existingHotel?.image_urls ?? [],
       active: true,
     }, { onConflict: "slug" }).select("id").single();
     if (error || !data) throw error || new Error(`Could not upsert ${sheet.hotelName}`);

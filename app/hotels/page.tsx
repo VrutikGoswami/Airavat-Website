@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { getService } from "@/data/services";
 import { ServicePageLayout } from "@/components/editorial/ServicePageLayout";
+import { HotelMediaGallery } from "@/components/hotels/HotelMediaGallery";
+import { getHotelMediaCatalog } from "@/lib/rate-catalog";
 
 const service = getService("hotels");
 
@@ -9,6 +11,11 @@ export const metadata: Metadata = {
   description: service.summary,
 };
 
-export default function HotelsPage() {
-  return <ServicePageLayout service={service} />;
+export default async function HotelsPage() {
+  const hotels = await getHotelMediaCatalog();
+  return (
+    <ServicePageLayout service={service}>
+      <HotelMediaGallery hotels={hotels} />
+    </ServicePageLayout>
+  );
 }
